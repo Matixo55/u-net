@@ -1,0 +1,5 @@
+generated/
+compressed/
+.idea/
+__pycache__/
+weights/
