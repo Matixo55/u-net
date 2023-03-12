@@ -1,14 +1,14 @@
 ## Original 256x256 monochromatic image
-<img src="https://github.com/Matixo55/u-net/blob/main/samples/original_simple_256.jpg?raw=true"  width="200%" height="200%">
+<img src="https://github.com/Matixo55/u-net/blob/main/samples/original_simple_256.jpg?raw=true"  width="200%" height="200%"><>
 ## Compressed version
-![compressed](https://github.com/Matixo55/u-net/blob/main/samples/compressed_simple_256.jpg?raw=true)
+<img src="https://github.com/Matixo55/u-net/blob/main/samples/compressed_simple_256.jpg?raw=true"  width="200%" height="200%"><>
 ## Restored by U-Net after 62 epochs
 ![restored]()
 
 ## Original 128x128 monochromatic image
-![original](https://github.com/Matixo55/u-net/blob/main/samples/original_simple_128.jpg?raw=true)
+<img src="https://github.com/Matixo55/u-net/blob/main/samples/original_simple_128.jpg?raw=true"  width="300%" height="300%"><>
 ## Compressed version
-![compressed](https://github.com/Matixo55/u-net/blob/main/samples/compressed_simple_128.jpg?raw=true)
+<img src="https://github.com/Matixo55/u-net/blob/main/samples/compressed_simple_128.jpg?raw=true"  width="300%" height="300%"><>
 ## Restored by U-Net after 44 epochs
 ![restored]()
 
