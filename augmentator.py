@@ -31,7 +31,7 @@ for filename in os.listdir(compressed):
     os.remove(os.path.join(compressed, filename))
 
 
-for filename in os.listdir(original)[:2]:
+for filename in os.listdir(original)[2:]:
     file = os.path.join(original, filename)
 
     if not os.path.isfile(file):

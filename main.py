@@ -5,7 +5,7 @@ from model import unet
 
 batch_size = 3
 image_size = 256
-n_samples = 356
+n_samples = 3503
 f = 64  # image_size/2
 k = 8  # image_size/16
 
@@ -21,7 +21,7 @@ model = unet(
 
 
 model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-    filepath=r".\weights\{epoch:02d}-epoch-{loss:.4f}-loss-{accuracy:.2f}-accuracy.hdf5",
+    filepath=r".\weights\{epoch:02d}-epoch-{loss:.4f}-loss.hdf5",
     save_weights_only=True,
     monitor="loss",
     mode="min",
@@ -31,7 +31,7 @@ model.fit(
     generator,
     batch_size=batch_size,
     steps_per_epoch=int(n_samples / (batch_size)),
-    epochs=1000,
+    epochs=100,
     callbacks=[model_checkpoint_callback],
 )
 model.save("model")
