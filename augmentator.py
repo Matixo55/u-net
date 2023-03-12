@@ -1,7 +1,6 @@
 import os
 
 from PIL import Image
-from PIL.Image import Transpose
 
 original = r".\original"
 generated = r".\generated"
