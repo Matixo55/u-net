@@ -1,20 +1,12 @@
-import numpy as np
 from keras.layers import BatchNormalization
-from tensorflow._api.v2 import math
-from tensorflow.python.keras.layers import *
-from tensorflow.python.keras.losses import mean_absolute_error
-from tensorflow.python.keras.models import *
+from tensorflow.python.keras import layers, models
 from tensorflow.python.keras.optimizer_v2.adam import Adam
-import keras.backend as K
-from tensorflow.python.util import dispatch
-import tensorflow as tf
-
 
 def deep_layer(input_x, f, k):
     F = f / 2
 
-    flat_1 = Conv2D(f, kernel_size=3, padding="same", activation="relu")(input_x)
-    return Conv2D(f, kernel_size=3, padding="same", activation="relu")(flat_1)
+    flat_1 = layers.Conv2D(f, kernel_size=3, padding="same", activation="relu")(input_x)
+    return layers.Conv2D(f, kernel_size=3, padding="same", activation="relu")(flat_1)
 
     deep_1a = Conv2D(F, kernel_size=3, padding="same")(input_x)
     deep_1 = Conv2D(F, kernel_size=1, padding="same")(deep_1a)
@@ -52,15 +44,15 @@ def deep_layer(input_x, f, k):
 
 
 def dconv_layer(input, f, k, old_deep_layer):
-    dconv_1 = Conv2DTranspose(f, kernel_size=2, strides=(2, 2))(input)
+    dconv_1 = layers.Conv2DTranspose(f, kernel_size=2, strides=(2, 2))(input)
     # dconv_1 = BatchNormalization()(dconv_1)
-    dconv_1 = Activation("relu")(dconv_1)
-    dconv_1 = Concatenate(axis=3)([dconv_1, old_deep_layer])
+    dconv_1 = layers.Activation("relu")(dconv_1)
+    dconv_1 = layers.Concatenate(axis=3)([dconv_1, old_deep_layer])
 
-    dconv_flat = Conv2D(f / 2, kernel_size=3, padding="same", activation="relu")(
+    dconv_flat = layers.Conv2D(f / 2, kernel_size=3, padding="same", activation="relu")(
         dconv_1
     )
-    return Conv2D(f / 2, kernel_size=3, padding="same", activation="relu")(dconv_flat)
+    return layers.Conv2D(f / 2, kernel_size=3, padding="same", activation="relu")(dconv_flat)
 
     dconv_1 = Conv2D(f / 2, kernel_size=1, activation="relu", padding="same")(dconv_1)
     dconv_1 = BatchNormalization()(dconv_1)
@@ -70,7 +62,7 @@ def dconv_layer(input, f, k, old_deep_layer):
 
 
 def unet(shape, f: int, k: int, batch_size: int, pretrained_weights=None):
-    x_input = Input(shape=shape, batch_size=batch_size)
+    x_input = layers.Input(shape=shape, batch_size=batch_size)
 
     # -------------------------------------------------------------------------
 
@@ -88,7 +80,7 @@ def unet(shape, f: int, k: int, batch_size: int, pretrained_weights=None):
     k *= 2
     l = 2
 
-    conv_2 = MaxPooling2D(pool_size=2, strides=2)(deep_1)
+    conv_2 = layers.MaxPooling2D(pool_size=2, strides=2)(deep_1)
     deep_2 = deep_layer(conv_2, f, k)
 
     # -------------------------------------------------------------------------
@@ -97,7 +89,7 @@ def unet(shape, f: int, k: int, batch_size: int, pretrained_weights=None):
     k *= 2
     l = 3
 
-    conv_3 = MaxPooling2D(pool_size=2, strides=2)(deep_2)
+    conv_3 = layers.MaxPooling2D(pool_size=2, strides=2)(deep_2)
     deep_3 = deep_layer(conv_3, f, k)
 
     # -------------------------------------------------------------------------
@@ -106,7 +98,7 @@ def unet(shape, f: int, k: int, batch_size: int, pretrained_weights=None):
     k *= 2
     l = 4
 
-    conv_4 = MaxPooling2D(pool_size=2, strides=2)(deep_3)
+    conv_4 = layers.MaxPooling2D(pool_size=2, strides=2)(deep_3)
     deep_4 = deep_layer(conv_4, f, k)
 
     # -------------------------------------------------------------------------
@@ -115,7 +107,7 @@ def unet(shape, f: int, k: int, batch_size: int, pretrained_weights=None):
     k *= 2
     l = 5
 
-    conv_5 = MaxPooling2D(pool_size=2, strides=2)(deep_4)
+    conv_5 = layers.MaxPooling2D(pool_size=2, strides=2)(deep_4)
     deep_5 = deep_layer(conv_5, f, k)
 
     # -------------------------------------------------------------------------
@@ -152,10 +144,10 @@ def unet(shape, f: int, k: int, batch_size: int, pretrained_weights=None):
 
     # -------------------------------------------------------------------------
 
-    x_output = Conv2D(1, kernel_size=1)(dconv_4)
-    output = Add()([x_output, x_input])
+    x_output = layers.Conv2D(1, kernel_size=1)(dconv_4)
+    output = layers.Add()([x_output, x_input])
 
-    model = Model(inputs=x_input, outputs=output)
+    model = models.Model(inputs=x_input, outputs=output)
     model.compile(
         optimizer=Adam(learning_rate=0.0001),
         loss="mean_absolute_error",  # mean_squared_error
