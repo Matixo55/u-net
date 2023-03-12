@@ -1,5 +1,5 @@
 ## Original 256x256 monochromatic image
-![original](https://github.com/Matixo55/u-net/blob/main/samples/original_simple_256.jpg?raw=true)
+<img src="https://github.com/Matixo55/u-net/blob/main/samples/original_simple_256.jpg?raw=true"  width="200%" height="200%">
 ## Compressed version
 ![compressed](https://github.com/Matixo55/u-net/blob/main/samples/compressed_simple_256.jpg?raw=true)
 ## Restored by U-Net after 62 epochs
