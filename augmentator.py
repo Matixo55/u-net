@@ -1,6 +1,7 @@
 import os
 
 from PIL import Image
+from PIL.Image import Transpose
 
 original = r".\original"
 generated = r".\generated"
@@ -24,7 +25,14 @@ def generate(image, size, pk):
     return pk
 
 
-for filename in os.listdir(original):
+for filename in os.listdir(generated):
+    os.remove(os.path.join(generated, filename))
+
+for filename in os.listdir(compressed):
+    os.remove(os.path.join(compressed, filename))
+
+
+for filename in os.listdir(original)[:2]:
     file = os.path.join(original, filename)
 
     if not os.path.isfile(file):
@@ -34,10 +42,21 @@ for filename in os.listdir(original):
 
     img = Image.open(file)
 
-    rotations = [img, img.transpose(1), img.transpose(0), img.transpose(1).transpose(0)]
+    rotations = [
+        img,
+        img.transpose(1),
+        img.transpose(0),
+        img.transpose(1).transpose(0),
+        img.transpose(2),
+        img.transpose(2).transpose(1),
+        img.transpose(2).transpose(0),
+        img.transpose(2).transpose(1).transpose(0),
+    ]
 
     for image in rotations:
         r, g, b = image.split()
         pk = generate(r, size, pk)
         pk = generate(g, size, pk)
         pk = generate(b, size, pk)
+
+print(pk - 1)

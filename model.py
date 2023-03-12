@@ -1,7 +1,13 @@
+import numpy as np
 from keras.layers import BatchNormalization
+from tensorflow._api.v2 import math
 from tensorflow.python.keras.layers import *
+from tensorflow.python.keras.losses import mean_absolute_error
 from tensorflow.python.keras.models import *
 from tensorflow.python.keras.optimizer_v2.adam import Adam
+import keras.backend as K
+from tensorflow.python.util import dispatch
+import tensorflow as tf
 
 
 def deep_layer(input_x, f, k):
@@ -47,7 +53,7 @@ def deep_layer(input_x, f, k):
 
 def dconv_layer(input, f, k, old_deep_layer):
     dconv_1 = Conv2DTranspose(f, kernel_size=2, strides=(2, 2))(input)
-    dconv_1 = BatchNormalization()(dconv_1)
+    # dconv_1 = BatchNormalization()(dconv_1)
     dconv_1 = Activation("relu")(dconv_1)
     dconv_1 = Concatenate(axis=3)([dconv_1, old_deep_layer])
 
@@ -70,11 +76,11 @@ def unet(shape, f: int, k: int, batch_size: int, pretrained_weights=None):
 
     l = 1
 
-    conv_1 = Conv2D(f / 2, kernel_size=3, padding="same")(x_input)
-    conv_1 = BatchNormalization()(conv_1)
-    conv_1 = Activation("relu")(conv_1)
+    # conv_1 = Conv2D(f / 2, kernel_size=3, padding="same")(x_input)
+    # conv_1 = BatchNormalization()(conv_1)
+    # conv_1 = Activation("relu")(conv_1)
 
-    deep_1 = deep_layer(conv_1, f, k)
+    deep_1 = deep_layer(x_input, f, k)
 
     # -------------------------------------------------------------------------
 
@@ -151,9 +157,10 @@ def unet(shape, f: int, k: int, batch_size: int, pretrained_weights=None):
 
     model = Model(inputs=x_input, outputs=output)
     model.compile(
-        optimizer=Adam(learning_rate=0.001, beta_1=0.99),  # 0.0001
+        optimizer=Adam(learning_rate=0.0001),
         loss="mean_absolute_error",  # mean_squared_error
         metrics=["accuracy"],
+        run_eagerly=True,
     )
 
     # model.summary()
