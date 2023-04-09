@@ -202,4 +202,4 @@ def run(gradient_size, filename):
     img.save(rf".\samples\{filename}.jpg", quality=100)
 
 
-run(gradient_size=8, filename=r"z23")
+run(gradient_size=8, filename=r"calibration_chart")
