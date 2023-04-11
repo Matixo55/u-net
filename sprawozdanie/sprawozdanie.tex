@@ -9,7 +9,7 @@
 \usepackage{t1enc}
 \usepackage{graphicx}
 \usepackage{indentfirst}
-\usepackage[belowskip=-15pt,aboveskip=10pt]{caption}
+\usepackage[belowskip=-15pt,aboveskip=15pt]{caption}
 
 \graphicspath{ {./} }
 \hoffset=-3.0cm    
@@ -215,8 +215,7 @@ Zauważyć można zbliżone wyniki sieci o 3, 4 i 5 poziomach.
 Dla 1 i 2 poziomów wystąpiło znaczące pogorszenie wyników. Zmiana wartości funkcji straty spowolniła przy podobnej liczbie epok.
 Wynika z tego, że do problemu wystarczy zastosowania sieci o 3 lub 4 poziomach, co przyśpieszy proces uczenia.
 \subsection{Rozmiar obrazu wejściowego}
-Przetestowany został również wpływ rozmiaru obrazu wejściowego na wartość funkcji straty, przy 5 poziomach sieci.
-\\
+Przetestowany został również wpływ rozmiaru obrazu wejściowego na wartość funkcji straty przy 5 poziomach sieci.
 \begin{figure}[h!]
 \begin{center}
 	\includegraphics[width=0.7\columnwidth]{size.png}
@@ -225,9 +224,9 @@ Przetestowany został również wpływ rozmiaru obrazu wejściowego na wartość
 \end{figure}
 Zauważyć można podobne wyniki dla obrazów o rozmiarze 64x64 oraz 128x128 pixeli.
 Dla obrazu o rozmiarach 128x128 pixeli zauważyć można nieznacznie lepsze wyniki dla końcowych epok.
-Jest to jednak skutkiem przetrenowania, gdyż wartość funkcji straty w zbiorze walidacyjnym pozostawała stała.
+Jest to jednak skutkiem przetrenowania, gdyż wartość funkcji straty w zbiorze walidacyjnym była stała.
 W przypadku obrazu o rozmiarze 512x512 pixeli nastąpiło znaczące pogorszenie wyników.
-Zasugerować można wybór dowolnego z rozmiarów 64x64, 128x128 oraz 256x256 pixeli.
+Rozważyć można wybór dowolnego z rozmiarów 64x64, 128x128 oraz 256x256 pixeli.
 Należy jednak pamiętać, że mniejszy rozmiar obrazu wejściowego, choć przyśpiesza szkolenie,
 proporcjonalnie wpływa na czas odtwarzania pełnego obrazu.
 
@@ -239,30 +238,29 @@ Wartości otrzymanej macierzy są zaokrąglane do liczb całkowitych oraz nastę
 W przypadku segmentów na krawędziach obrazu, brakujący fragment zostaje uzupełniony lustrzanym odbiciem obrazu a po szkoleniu odcięty.
 Z podejściem wiąże się problem, widocznych granic między przetworzonymi segmentami.
 Rozwiązaniem jest częściowe pokrycie segmentów przy przetwarzaniu oraz zastosowanie średniej ważonej na ich granicy.
-
+Wagi rzędów i kolumn z segmentu rosną w głąb segmentu.
+\\
 \begin{figure}[h!]
 \begin{center}
 	\includegraphics[width=0.5\columnwidth]{overlap.png}
 	\caption{Nachodzace na siebie segmenty obrazu}
 \end{center}
 \end{figure}
-
+\\
 Pomimo zastosowania średniej ważonej, na granicy segmentów często pozostaje widoczna linnia.
 Problem ten można rozwiązać poprzez wybranie odpowiedniej wartości przesunięcia segmentów.
+Zauważyć można spadek wartości dla przesunięcia o 8 i 16 pixeli [Rys. 17]. Jest to związane z podziałem obrazu na obszary 8x8 przez algorytm JPEG.
+Jeżeli krawędzie powstałe w wyniku przetwarzania obrazu pokryją się z krawędziami powstającymi przy kompresji,
+wynikowy błąd będzie mniejszy niż w przypadku, gdyby na obrazie tworzyły się dodatkowe granice.
+Dodatkowo widoczny jest spadek dla 11 pixeli, dla którego nie znam wyjaśnienia.
+Wartość 8 pixeli została wybrana jako optymalna, przy większych wartościach pojawia się ryzyko rozmazania obrazu przez średnią ważoną.
+\newpage
 \begin{figure}[h!]
 \begin{center}
 	\includegraphics[width=0.7\columnwidth]{overlap_and_loss.png}
 	\caption{Wartość funkcji błędu dla różnych wartości przesunięcia}
 \end{center}
 \end{figure}
-Zauważyć można spadek wartości dla przesunięcia o 8 i 16 pixeli. Jest to związane z podziałem obrazu na obszary 8x8 przez algorytm JPEG.
-Jeżeli krawędzie powstałe w wyniku przetwarzania obrazu pokryją się z krawędziami powstającymi przy kompresji,
-wynikowy błąd będzie mniejszy niż w przypadku, gdyby na obrazie tworzyły się dodatkowe granice.
-Dodatkowo widoczny jest spadek dla 11 pixeli, dla którego nie znam wyjaśnienia.
-Wartość 8 pixeli została wybrana jako optymalna, przy większych wartościach pojawia się ryzyko rozmazania obrazu przez średnią ważoną.
-
-
-\section{Sieci konwolucyjne}
 \section{Wnioski}
 Można zastosować sieci typu U-Net do usuwania artefaktów kompresji stratnej.
 Takie rozwiązanie jest jednak bardzo wolne. Przetworzenie obrazu o wymiarach 3024x4032 pixeli zajmuje około 80 sekund.
