@@ -26,7 +26,7 @@
 
 \begin{document}
 \maketitle
-	Celem dokumentu jest przedstawienie sprawozdania z wykonania projektu w ramach przedmiotu Projekt Indywidualny na semestrze 5 kierunku Informatyka Stosowana Wydziału Elektrycznego PW.
+	Celem dokumentu jest przedstawienie sprawozdania z wykonania projektu w ramach przedmiotu Projekt Indywidualny na semestrze 4 kierunku Informatyka Stosowana Wydziału Elektrycznego PW.
 \begin{center}
 Projekt realizowany jest pod kierunkiem dr hab. inż. Marcina Iwanowskiego.
 \end{center}
@@ -39,46 +39,46 @@ Projekt realizowany jest pod kierunkiem dr hab. inż. Marcina Iwanowskiego.
 \indent Projekt ma na celu zaprezentowanie możliwości wykorzystania sieci neuronowych typu U-Net do usuwania artefaktów kompresji stratnej JPEG.
 Sprawdzone zostały różne architektury sieci, od 1 do 5 poziomów, oraz wpływ rozmiaru obrazu wejściowego na wartość funkcji straty.
 Rozwiązanie zostało przystosowane do przetwarzania obrazów bez względu na ich rozmiar.
-Dla porównania sprawdzone zostały również proste sieci konwolucyjne.
 \section{Algorytm kompresji JPEG}
-Przy niskich wartościach ustawienia jakości, na zapisanych obrazach wyraźny staje się podział zdjęcia na sekcje przez algorytm,
-jak i zaburzenia na krawędziach obiektów. Wynikają one ze sposobu działania algorytmu.
+Przy niskich wartościach parametru jakości, na zapisanych obrazach wyraźny staje się podział zdjęcia na sekcje przez algorytm,
+jak i zaburzenia na krawędziach obiektów. Wynikają one z opisanego poniżej sposobu działania algorytmu.
 \subsection{Operacje na przestrzeni barw}
 W pierwszej kolejności następuje konwersja przestrzeni barw RGB do przestrzeni YCbCr.
 Następnie chrominancja jest podpróbkowana???, w wyniku czego każdy pixel obrazu wyjściowego stanowi średnią 4 pixeli obrazu wejściowego.
-W tym kroku nastepuje utrata danych, jest ona jednak mało odczuwalna ze względu budowę ludzkiego oka.
+Nastepuje utrata danych ale jest mało odczuwalna ze względu budowę ludzkiego oka.
 \subsection{Dyskretna transformata kosinusowa}
 Następuje podział obrazu na bloki 8x8 pixeli i odjęcie 128 od wartości każdego pixela.
-Każdy blok zostaje przekształcony w macierz, obrazującą użycie poszczególnych bloków ze stałego zbioru [Rys. 1] \\
+Każdy blok zostaje przekształcony w macierz, obrazującą użycie poszczególnych bloków ze stałego zbioru [Rys. 1]. \\
 
 \begin{figure}[h!]
 	\begin{center}
 	\includegraphics[width=0.5\columnwidth]{DCT.png}
-	\caption{???}
+	\caption{Dyskretna Transformata Kosinusowa}
 \end{center}
 \end{figure}
 Sumując wartości pixeli z wybranych bloków, możemy uzyskać dowolną kombinację 8x8 pixeli.
 \subsection{Kwantyzacja}
-W tym kroku następuje zmniejszenie ilości bitów potrzebnych do reprezentacji wartości pixeli.
+W kolejnym kroku następuje zmniejszenie ilości bitów potrzebnych do reprezentacji wartości pixeli.
 Wartości z macierzy są dzielone przez odpowiadające wartości z tablicy kwantyzacji,
-której zawartość zależy od parametru quality przy zapisie zdjęcia. Współczynniki w tablicy kwantyzacji rosną, zmierzając do dolnej, prawej części macierzy.
+której zawartość zależy od parametru jakości przy zapisie zdjęcia (wartości są odwrotnie proporcjonalne do wartości parametru jakości).
+Współczynniki w tablicy kwantyzacji rosną, zmierzając do dolnej, prawej części macierzy.
 Odpowiada to zwiększaniu się zagęszczenia informacji w tablicy bloków wykorzystanej w poprzednim kroku.
 Taka operacja wykorzystuje problem z rozróżnieniem informacji o dużym zagęszczeniu przez ludzkie oko.
-Otrzymane wartości są zaokrąglane do najbliższej liczby całkowitej, podczas tego procesu następuje utrata danych.
+Otrzymane wartości są zaokrąglane do najbliższej liczby całkowitej, następuje utrata danych.
 \subsection{Kodowanie}
 Otrzymana macierz jest spłaszczana według następującego wzorca:
 \begin{figure}[h!]
 	\begin{center}
 	\includegraphics[width=0.5\columnwidth]{pattern.png}
-	\caption{???}
+	\caption{Kolejność spłaszczania segmentu}
 \end{center}
 \end{figure}
 \\
 Co zwiększa prawdopodobieństwo wystąpienia długich sekwencji zer, możliwych do zapisania w zwięźlejszy sposób.
-Na koniec obraz zostaje poddany kompresji poprzez kodowanie Huffmana.
+Na koniec obraz zostaje poddany kompresji kodowaniem Huffmana.
 \newpage
 \section{Sieci typu U-Net}
-U-Net jest architekturą sieci konwolucyjnch, najczęściej stosowaną do segmentacji obrazów. [Rys. 3] Wyróżnić można jej 2 części
+U-Net jest architekturą sieci konwolucyjnch, najczęściej stosowaną do segmentacji obrazów. Wyróżnić można jej 2 części.
 \begin{figure}[h!]
 	\begin{center}
 	\includegraphics[width=0.9\columnwidth]{unet.png}
@@ -86,38 +86,37 @@ U-Net jest architekturą sieci konwolucyjnch, najczęściej stosowaną do segmen
 \end{center}
 \end{figure}
 \subsection{Enkoder}
-Pierwszą w modelu jest warstwa wejściowa, w której dla każdego pixela czarno-białego obrazu wejściowego odpowiada 1 neuron.
-Następnie występują 2 etapy składające się z konwolucji o kernelu??? 3x3 oraz funkcji aktywacji ReLu, zwiększające liczbę neuronów do 64.
-Kolejne są powtarzalne warstwy składające się z Downsampling??? i konwolucji z funkcją aktywacji relu.
+Pierwszą częścią modelu jest warstwa wejściowa, w której dla każdego pixela czarno-białego obrazu wejściowego odpowiada 1 neuron.
+Następnie występują 2 etapy składające się z konwolucji o jądrze 3x3 oraz funkcji aktywacji ReLu, zwiększające liczbę neuronów do 64.
+Kolejnu jest powtarzalny segment składający się z Downsampling??? i konwolucji z funkcją aktywacji relu.
 Skutkuje to czterokrotnym zmniejszeniem rozmiaru obrazu oraz podwojeniem liczby neuronów w każdej warstwie.
 \subsection{Dekoder}
-Każda warstwa dekodera składa się z 3 elementów.
-Pierwszy jest Upsampling???
-Następnie powstała sieć jest łączona z odpowiadającą jej częścią enkodera.
+Każda z powtarzalnych warstw dekodera składa się z 3 elementów.
+Pierwsza jest transponowana konwolucja o jądrze 2x2. Następnie powstała sieć jest łączona z odpowiadającą jej warstwą enkodera.
 Takie połączenie przeciwdziała problemowi zanikającego gradientu - przywraca cechy wykryte w poprzednich warstwach sieci.
-Po niej występują 2 warstwy upconv??? z funkcją aktywacji ReLu, takie same jak w enkoderze.
+Po niej występują 2 warstwy konwolucji z funkcją aktywacji ReLu, takie same jak w enkoderze.
 Dekoder zakończony jest spłaszczeniem obrazu do postaci, w której każdy neuron odpowiada 1 pikselowi obrazu wyjściowego.
 Warstwa wyjściowa jest sumą obrazu wejściowego i spłaszczonej warstwy.
-Przy takim podejściu, zwanym uczenie rezydualne???, sieć tworzy maskę zamiast potrzebnych w obrazie wejściowym, zamiast bezpośrednio obraz przekształcać.
+Przy takim rozwiązaniu, zwanym połączeniami rezydualnymi, sieć tworzy maskę zmian potrzebnych w obrazie wejściowym, zamiast bezpośrednio obraz przekształcać.
 
 \section{Augmentacja danych}
 Zbiór danych stanowi 16 kolorowych zdjęć wysokiej rozdzielczości, 1 czarnobiały wykres służący do kalibracji sprzętu fotograficznego,
-oraz 2 sztuczne obrazy składające się z gradientów kolorów i prostych kształtów.
+oraz 3 wygenerowane obrazy składające się z gradientów kolorów i prostych kształtów.
 Zdjęcia zostają podzielone na warstwy RGB, a następnie utworzone zostają wszystkie możliwe kombinacje obróceń i odbić obrazu.
-Następnie następuje pocięcie zdjęć na kwadratowe segmenty o zadanym rozmiarze.
+Następuje pocięcie zdjęć na kwadratowe segmenty o zadanym rozmiarze.
 Oryginał segemntu zostaje zapisany przy ustawieniu jakości równym 100 wykorzystywana jako maska w modelu.
-Dane uczące zostaja zapisane przy ustawieniu jakości równym 25, przy którym artefakty kompresji zaczynają być zauważalne.
+Dane uczące zostaja zapisane przy ustawieniu równym 25, przy którym artefakty kompresji zaczynają być łatwo zauważalne.
 W przypadku podziału na segmenty o rozmiarze 256x256 pixeli otrzymujemy 9500 próbek w zbiorze testowym, oraz 1000 w zbiorze walidacyjnym.
 
 \section{Model i szkolenie}
 Podstawową architekturą w projekcie jest, najczęściej stosowana, sieć o 5 poziomach.
 Podczas uczenia utworzone zostają generatory danych testowych i walidacyjnych.
 Zawierają one skompresowane oraz oryginalne obrazy, te drugie wykorzystywane w modelu jako maska.
-Pogrupowane zostają w paczki??? o rozmiarze 3.
+Pogrupowane zostają w paczki po 3.
 Podczas jednego kroku uczenia, wykorzystane zostaje, losowo wybrane, 10\% paczek ze zbioru uczącego.
 Proces uczenia trwa 100 epok.
 Dane uczące i walidacyjne wybierane są na podstawie stałego ziarna, co pozwala na porównanie wyników modeli.
-Jako funkcję straty wybrana została wartość bezwzględna błędu, optimizer??? to Adam o współczynniku uczenia równym 0.0001.
+Jako funkcję straty wybrana została wartość bezwzględna błędu, optimizer??? to Adam o współczynniku uczenia 0.0001.
 
 \begin{figure}[h!]
 \begin{center}
@@ -128,14 +127,14 @@ Jako funkcję straty wybrana została wartość bezwzględna błędu, optimizer?
 
 Zauważyć można, że po 20 epoce, tempo zmniejszania wartości funkcji straty znacząco maleje,
 a po 60 epoce praktycznie zatrzymuje.
-Wartym uwagi jest niższa wartość straty w zbiorze walidacyjnym niż uczącym. Obydwa zbiory zostały utworzone z tych samych zdjęć.
-Prawdopodobnie jest losowy przypadek w wybranym ziarnie generatora danych.
-Podczas uczenia wartość accuracy??? była bardzo mała i stała. Nie jest ona jednak miarodajną metryką, gdyż oczekuje dokładnych wartości pixeli.
-Człowiek nie jest w stanie rozpoznać małych różnić w wartościach RGB, w związku z czym ważna jest jedynie wartość funkcji straty.
+Wartym uwagi jest niższa wartość straty w zbiorze walidacyjnym niż uczącym. Jako, że zbiory zostały utworzone z tych samych zdjęć,
+prawdopodobnie jest, że to losowy przypadek w wybranym ziarnie generatora danych.
+Podczas uczenia dokładność była znikoma i stała. Nie jest ona jednak miarodajną metryką, gdyż oczekuje dokładnych wartości pixeli.
+Człowiek nie jest w stanie rozpoznać małych różnić w wartościach RGB, w związku z czym ważna była jedynie wartość funkcji straty.
 
 \section{Wyniki działania modelu}
-W sekcji przedstawione zostały wyniki działania oddtwarzanai obrazów zapisanych ze współczynnikiem jakości 25,
-modelem o 5 warstwach, rozmiarze segmentu 256x256 oraz 8 pixelach przesunięcia przy odtawarzaniu (proces opisany w sekcji 8).
+W sekcji przedstawione zostały wyniki działania odtwarzania obrazów modelem o 5 warstwach,
+rozmiarze segmentu 256x256 oraz 8 pixelach przesunięcia przy odtawarzaniu (proces opisany w sekcji 8).
 \newpage
 \subsection{Roślinność na tle kamiennej ściany}
 \begin{figure}[h!]
@@ -195,25 +194,23 @@ W porównaniach widoczna jest siatka kwadratów o boku 8 pixeli, wynikajaca ze s
 Różnica między obrazem oryginalnym i odtworzonym jest mniejsza niż między obrazem oryginalnym i skompresowanym oraz skompresowanym i odtworzonym.
 
 \section{Wybór optymalnej architektury}
-Ważnym przy wyborze architektury sieci jest jej złożoność, nadmierna negatywnie wpływa na czas uczenia pomimo braku poprawy wartości funkcji błędu.
+Ważnym przy wyborze architektury sieci jest jej złożoność, nadmierna negatywnie wpływa na czas uczenia pomimo znikomej poprawy wartości funkcji błędu.
 \subsection{Liczba poziomów sieci}
-Przetestowane zostały sieci o 2, 3, 4 i 5 poziomach. Każda została wyszkolona w takich samych warunkach i przy stałym ziarnie generatora danych.
+Przetestowane zostały sieci od 1 do 5 poziomów. Każda została wyszkolona w takich samych warunkach i przy stałym ziarnie generatora danych.
 \begin{figure}[h!]
 \begin{center}
 	\includegraphics[width=0.9\columnwidth]{unet4.png}
 	\caption{Architektura sieci U-Net o 4 poziomach}
 \end{center}
 \end{figure}
-\\
-Osiągnięte zostały następujące wyniki.
-\\
+\newpage
+\subsection{Spostrzeżenia}
 \begin{figure}[h!]
 \begin{center}
 	\includegraphics[width=0.7\columnwidth]{layers.png}
 	\caption{Funkcja straty przy różnej liczbie poziomów sieci}
 \end{center}
 \end{figure}
-\\
 Zauważyć można zbliżone wyniki sieci o 3, 4 i 5 poziomach.
 Dla 1 i 2 poziomów wystąpiło znaczące pogorszenie wyników. Zmiana wartości funkcji straty spowolniła przy podobnej liczbie epok.
 Wynika z tego, że do problemu wystarczy zastosowania sieci o 3 lub 4 poziomach, co przyśpieszy proces uczenia.
