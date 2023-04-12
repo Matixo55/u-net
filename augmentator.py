@@ -18,20 +18,25 @@ def generate(image, size, pk, folder, validation_pk):
         while x + size < image.size[0]:
             cropped_image = image.crop((x, y, x + size, y + size))
 
+            # 10% segmentów trafia do zbioru walidacyjnego
             if folder == "train" and random.randint(0, 10) == 5:
                 validation_pk += 1
                 cropped_image.save(
-                    os.path.join(generated, "validation", str(pk) + ".jpg"), quality=100
+                    os.path.join(generated, "validation", str(pk) + ".jpg"),
+                    quality=100,
                 )
                 cropped_image.save(
-                    os.path.join(compressed, "validation", str(pk) + ".jpg"), quality=25
+                    os.path.join(compressed, "validation", str(pk) + ".jpg"),
+                    quality=25,
                 )
             else:
                 cropped_image.save(
-                    os.path.join(generated, folder, str(pk) + ".jpg"), quality=100
+                    os.path.join(generated, folder, str(pk) + ".jpg"),
+                    quality=100,
                 )
                 cropped_image.save(
-                    os.path.join(compressed, folder, str(pk) + ".jpg"), quality=25
+                    os.path.join(compressed, folder, str(pk) + ".jpg"),
+                    quality=25,
                 )
                 pk += 1
             x += size
@@ -65,10 +70,9 @@ for filename in os.listdir(original):
     if not os.path.isfile(file) or filename[0] == "t":
         continue
 
-    print(filename)
-
     img = Image.open(file)
 
+    # Wygenerowane zostają wszystkie rotacje i odbicia danego segmentu
     rotations = [
         img,
         img.transpose(1),
@@ -97,10 +101,9 @@ for filename in os.listdir(original):
     if not os.path.isfile(file) or filename[0] != "t":
         continue
 
-    print(filename)
-
     img = Image.open(file)
 
+    # Wygenerowane zostają wszystkie rotacje i odbicia danego segmentu
     rotations = [
         img,
         img.transpose(1),

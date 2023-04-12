@@ -1,32 +1,27 @@
 import matplotlib.pyplot as plt
 import tensorflow as tf
 
-from data import *
+from data import data_generator
 from model import unet
-from dense_model import dense_unet
 
 batch_size = 3
-image_size = 256
-n_samples = 9515
-n_validation_samples = 997
+sample_size = 256
+test_samples_number = 9515
+validation_samples_number = 997
 epochs = 100
-f = 64  # image_size/2
-k = 8  # image_size/16
-filename = "flat-2"
+neurons_number = 64
+steps_divider = 10
+filename = "5-layers"
 
-train_data_generator = data_generator(
-    size=image_size, batch_size=batch_size, type="train"
-)
+train_data_generator = data_generator(size=sample_size, batch_size=batch_size, type="train")
 validation_data_generator = data_generator(
-    size=image_size, batch_size=batch_size, type="validation"
+    size=sample_size, batch_size=batch_size, type="validation"
 )
 
 model = unet(
-    shape=(image_size, image_size, 1),
-    f=f,
-    k=k,
+    shape=(sample_size, sample_size, 1),
+    neurons_number=neurons_number,
     batch_size=batch_size,
-    # pretrained_weights=r".\weights\24-epoch-2.4550-loss-256-real.hdf5",
 )
 
 model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
@@ -40,10 +35,10 @@ model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
 history = model.fit(
     train_data_generator,
     batch_size=batch_size,
-    steps_per_epoch=int(n_samples / (batch_size * 10)),
+    steps_per_epoch=int(test_samples_number / (batch_size * steps_divider)),
     epochs=epochs,
     callbacks=[model_checkpoint_callback],
-    validation_steps=int(n_validation_samples / batch_size),
+    validation_steps=int(validation_samples_number / batch_size),
     validation_data=validation_data_generator,
     validation_batch_size=batch_size,
 )
@@ -57,6 +52,6 @@ plt.savefig(f"{filename}.png")
 
 model.save("model")
 
-with open(f"{filename}.txt", "w") as f:
-    f.write(str(history.history["loss"]) + "\n")
-    f.write(str(history.history["val_loss"]))
+with open(f"{filename}.txt", "w") as neurons:
+    neurons.write(str(history.history["loss"]) + "\n")
+    neurons.write(str(history.history["val_loss"]))

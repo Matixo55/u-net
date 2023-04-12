@@ -45,9 +45,7 @@ def dconv_layer(input, f, k, old_deep_layer):
     dconv_1 = layers.BatchNormalization()(dconv_1)
     dconv_1 = layers.Activation("relu")(dconv_1)
     dconv_1 = layers.Concatenate(axis=3)([dconv_1, old_deep_layer])
-    dconv_1 = layers.Conv2D(f / 2, kernel_size=1, padding="same", use_bias=False)(
-        dconv_1
-    )
+    dconv_1 = layers.Conv2D(f / 2, kernel_size=1, padding="same", use_bias=False)(dconv_1)
     dconv_1 = layers.BatchNormalization()(dconv_1)
     dconv_1 = layers.Activation("relu")(dconv_1)
     dconv_1 = layers.Activation("relu")(dconv_1)
@@ -62,9 +60,7 @@ def dense_unet(shape, f: int, k: int, batch_size: int, pretrained_weights=None):
 
     l = 1
 
-    conv_1 = layers.Conv2D(f / 2, kernel_size=3, padding="same", use_bias=False)(
-        x_input
-    )
+    conv_1 = layers.Conv2D(f / 2, kernel_size=3, padding="same", use_bias=False)(x_input)
     conv_1 = layers.BatchNormalization()(conv_1)
     conv_1 = layers.Activation("relu")(conv_1)
 

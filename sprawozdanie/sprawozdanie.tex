@@ -2,7 +2,8 @@
 \title{Usuwanie artefaktów kompresji stratnej przy pomocy głębokich sieci neuronowych}
 \date{\today}
 
-\documentclass[a4paper,11pt]{article}
+\documentclass[a4paper, 12pt]{article}
+
 
 \usepackage[T1]{polski}
 \usepackage[utf8]{inputenc}
@@ -10,57 +11,55 @@
 \usepackage{graphicx}
 \usepackage{indentfirst}
 \usepackage[belowskip=-15pt,aboveskip=15pt]{caption}
+\usepackage[a4paper]{geometry}
+\usepackage{listings}
 
 \graphicspath{ {./} }
-\hoffset=-3.0cm    
-\textwidth=18cm 
-\evensidemargin=0pt
-\frenchspacing
-\voffset=-3cm 
-\textheight=27cm 
-
-\setlength{\parindent}{20pt} 
-\setlength{\parskip}{\medskipamount}
 \setlength\intextsep{0pt}
-\raggedbottom 
+\setlength{\parindent}{20pt}
 
 \begin{document}
 \maketitle
-	Celem dokumentu jest przedstawienie sprawozdania z wykonania projektu w ramach przedmiotu Projekt Indywidualny na semestrze 4 kierunku Informatyka Stosowana Wydziału Elektrycznego PW.
+\thispagestyle{empty}
+\newpage
+\thispagestyle{empty}
+Celem dokumentu jest przedstawienie sprawozdania z wykonania projektu w ramach przedmiotu Projekt Indywidualny na semestrze 4 kierunku Informatyka Stosowana Wydziału Elektrycznego PW.
 \begin{center}
 Projekt realizowany jest pod kierunkiem dr hab. inż. Marcina Iwanowskiego.
 \end{center}
-
+\thispagestyle{empty}
 \newpage
-
 \tableofcontents
+\thispagestyle{empty}
+
 \newpage
 \section{Opis problemu}
 \indent Projekt ma na celu zaprezentowanie możliwości wykorzystania sieci neuronowych typu U-Net do usuwania artefaktów kompresji stratnej JPEG.
-Sprawdzone zostały różne architektury sieci, od 1 do 5 poziomów, oraz wpływ rozmiaru obrazu wejściowego na wartość funkcji straty.
+Sprawdzone zostały różne architektury sieci, od 1 do 5 poziomów, oraz wpływ rozmiaru segmentu wejściowego na wartość funkcji straty.
 Rozwiązanie zostało przystosowane do przetwarzania obrazów bez względu na ich rozmiar.
 \section{Algorytm kompresji JPEG}
 Przy niskich wartościach parametru jakości, na zapisanych obrazach wyraźny staje się podział zdjęcia na sekcje przez algorytm,
-jak i zaburzenia na krawędziach obiektów. Wynikają one z opisanego poniżej sposobu działania algorytmu.
+jak i zaburzenia na krawędziach obiektów. Wynikają one z opisanego poniżej sposobu działania algorytmu. \cite{JPEG}
 \subsection{Operacje na przestrzeni barw}
 W pierwszej kolejności następuje konwersja przestrzeni barw RGB do przestrzeni YCbCr.
-Następnie chrominancja jest podpróbkowana???, w wyniku czego każdy pixel obrazu wyjściowego stanowi średnią 4 pixeli obrazu wejściowego.
+Następnie chrominancja jest podpróbkowana, w wyniku czego każdy pixel obrazu wyjściowego stanowi średnią 4 pixeli obrazu wejściowego.
 Nastepuje utrata danych ale jest mało odczuwalna ze względu budowę ludzkiego oka.
 \subsection{Dyskretna transformata kosinusowa}
 Następuje podział obrazu na bloki 8x8 pixeli i odjęcie 128 od wartości każdego pixela.
-Każdy blok zostaje przekształcony w macierz, obrazującą użycie poszczególnych bloków ze stałego zbioru [Rys. 1]. \\
-
+Każdy blok zostaje przekształcony w macierz, obrazującą użycie poszczególnych bloków ze stałego zbioru Rys. \ref{fig:DCT}.
 \begin{figure}[h!]
 	\begin{center}
-	\includegraphics[width=0.5\columnwidth]{DCT.png}
+	\includegraphics[width=0.4\columnwidth]{DCT.png}
 	\caption{Dyskretna Transformata Kosinusowa}
+	\label{fig:DCT}
 \end{center}
 \end{figure}
+\\
 Sumując wartości pixeli z wybranych bloków, możemy uzyskać dowolną kombinację 8x8 pixeli.
 \subsection{Kwantyzacja}
 W kolejnym kroku następuje zmniejszenie ilości bitów potrzebnych do reprezentacji wartości pixeli.
 Wartości z macierzy są dzielone przez odpowiadające wartości z tablicy kwantyzacji,
-której zawartość zależy od parametru jakości przy zapisie zdjęcia (wartości są odwrotnie proporcjonalne do wartości parametru jakości).
+której zawartość zależy od parametru jakości przy zapisie zdjęcia (wartości są odwrotnie proporcjonalne do parametru jakości).
 Współczynniki w tablicy kwantyzacji rosną, zmierzając do dolnej, prawej części macierzy.
 Odpowiada to zwiększaniu się zagęszczenia informacji w tablicy bloków wykorzystanej w poprzednim kroku.
 Taka operacja wykorzystuje problem z rozróżnieniem informacji o dużym zagęszczeniu przez ludzkie oko.
@@ -78,7 +77,9 @@ Co zwiększa prawdopodobieństwo wystąpienia długich sekwencji zer, możliwych
 Na koniec obraz zostaje poddany kompresji kodowaniem Huffmana.
 \newpage
 \section{Sieci typu U-Net}
-U-Net jest architekturą sieci konwolucyjnch, najczęściej stosowaną do segmentacji obrazów. Wyróżnić można jej 2 części.
+U-Net jest architekturą sieci konwolucyjnch, najczęściej stosowaną do segmentacji semantycznej obrazów \cite{ronneberger2015unet}.
+Udokumentowane zostały również próby wykorzystania architektury do usuwania zakłóceń z obrazu \cite{antholzer2018deep} .
+Wyróżnić można 2 części sieci U-Net.
 \begin{figure}[h!]
 	\begin{center}
 	\includegraphics[width=0.9\columnwidth]{unet.png}
@@ -86,37 +87,79 @@ U-Net jest architekturą sieci konwolucyjnch, najczęściej stosowaną do segmen
 \end{center}
 \end{figure}
 \subsection{Enkoder}
-Pierwszą częścią modelu jest warstwa wejściowa, w której dla każdego pixela czarno-białego obrazu wejściowego odpowiada 1 neuron.
+Pierwszą częścią modelu jest warstwa wejściowa, w której dla każdego pixela czarno-białego segmentu wejściowego odpowiada 1 neuron.
 Następnie występują 2 etapy składające się z konwolucji o jądrze 3x3 oraz funkcji aktywacji ReLu, zwiększające liczbę neuronów do 64.
-Kolejnu jest powtarzalny segment składający się z Downsampling??? i konwolucji z funkcją aktywacji relu.
-Skutkuje to czterokrotnym zmniejszeniem rozmiaru obrazu oraz podwojeniem liczby neuronów w każdej warstwie.
+Kolejnu jest powtarzalny segment składający się z redukcji rozdzielczości segmentu i konwolucji z funkcją aktywacji ReLu.
+Skutkuje to czterokrotnym zmniejszeniem rozmiaru segmentu oraz podwojeniem liczby neuronów w każdej warstwie.
+\newpage
+\lstset{language=Python}
+\lstset{frame=lines}
+\lstset{caption={Implementacja warstwy enkodera w bibliotece Keras}}
+\lstset{label={lst:code_direct}}
+\lstset{basicstyle=\footnotesize}
+\begin{lstlisting}
+pooling = layers.MaxPooling2D(pool_size=2, strides=2)(input)
+conv = layers.Conv2D(
+    neurons_number, kernel_size=3, padding="same", activation="relu"
+)(pooling)
+return layers.Conv2D(
+    neurons_number, kernel_size=3, padding="same", activation="relu"
+)(conv)
+\end{lstlisting}
+
 \subsection{Dekoder}
 Każda z powtarzalnych warstw dekodera składa się z 3 elementów.
 Pierwsza jest transponowana konwolucja o jądrze 2x2. Następnie powstała sieć jest łączona z odpowiadającą jej warstwą enkodera.
 Takie połączenie przeciwdziała problemowi zanikającego gradientu - przywraca cechy wykryte w poprzednich warstwach sieci.
 Po niej występują 2 warstwy konwolucji z funkcją aktywacji ReLu, takie same jak w enkoderze.
-Dekoder zakończony jest spłaszczeniem obrazu do postaci, w której każdy neuron odpowiada 1 pikselowi obrazu wyjściowego.
-Warstwa wyjściowa jest sumą obrazu wejściowego i spłaszczonej warstwy.
-Przy takim rozwiązaniu, zwanym połączeniami rezydualnymi, sieć tworzy maskę zmian potrzebnych w obrazie wejściowym, zamiast bezpośrednio obraz przekształcać.
+\lstset{language=Python}
+\lstset{frame=lines}
+\lstset{caption={Implementacja warstwy dekodera w bibliotece Keras}}
+\lstset{label={lst:code_direct}}
+\lstset{basicstyle=\footnotesize}
+\begin{lstlisting}
+tconv = layers.Conv2DTranspose(
+    neurons_number, kernel_size=2, strides=(2, 2), activation="relu"
+)(input)
+concat = layers.Concatenate(axis=3)([tconv, connected_layer])
+dconv = layers.Conv2D(
+    neurons_number / 2, kernel_size=3, padding="same", activation="relu"
+)(concat)
+return layers.Conv2D(
+    neurons_number / 2, kernel_size=3, padding="same", activation="relu"
+)(dconv)
+\end{lstlisting}
 
-\section{Augmentacja danych}
+Dekoder zakończony jest spłaszczeniem segmentu do postaci, w której każdy neuron odpowiada 1 pikselowi segmentu wyjściowego.
+Warstwa wyjściowa jest sumą segmentu wejściowego i spłaszczonej warstwy.
+Przy takim rozwiązaniu, zwanym połączeniami rezydualnymi, sieć tworzy maskę zmian potrzebnych w segmentu wejściowym,
+zamiast bezpośrednio segmentu przekształcać. \cite{he2015deep}
+
+\section{Generowanie zbioru danych}
 Zbiór danych stanowi 16 kolorowych zdjęć wysokiej rozdzielczości, 1 czarnobiały wykres służący do kalibracji sprzętu fotograficznego,
 oraz 3 wygenerowane obrazy składające się z gradientów kolorów i prostych kształtów.
-Zdjęcia zostają podzielone na warstwy RGB, a następnie utworzone zostają wszystkie możliwe kombinacje obróceń i odbić obrazu.
+Zdjęcia zostają podzielone na warstwy RGB, a następnie utworzone zostają wszystkie możliwe kombinacje obróceń i odbić segmentu.
 Następuje pocięcie zdjęć na kwadratowe segmenty o zadanym rozmiarze.
 Oryginał segemntu zostaje zapisany przy ustawieniu jakości równym 100 wykorzystywana jako maska w modelu.
 Dane uczące zostaja zapisane przy ustawieniu równym 25, przy którym artefakty kompresji zaczynają być łatwo zauważalne.
 W przypadku podziału na segmenty o rozmiarze 256x256 pixeli otrzymujemy 9500 próbek w zbiorze testowym, oraz 1000 w zbiorze walidacyjnym.
+\begin{figure}[h!]
+\begin{center}
+	\includegraphics[width=0.85\columnwidth]{dataset.png}
+	\caption{Przykładowe obrazy ze zbioru danych}
+\end{center}
+\end{figure}
 
+\newpage
 \section{Model i szkolenie}
 Podstawową architekturą w projekcie jest, najczęściej stosowana, sieć o 5 poziomach.
 Podczas uczenia utworzone zostają generatory danych testowych i walidacyjnych.
-Zawierają one skompresowane oraz oryginalne obrazy, te drugie wykorzystywane w modelu jako maska.
+Zawierają one skompresowane oraz oryginalne segmentu, te drugie wykorzystywane w modelu jako maska.
 Pogrupowane zostają w paczki po 3.
 Podczas jednego kroku uczenia, wykorzystane zostaje, losowo wybrane, 10\% paczek ze zbioru uczącego.
 Proces uczenia trwa 100 epok.
 Dane uczące i walidacyjne wybierane są na podstawie stałego ziarna, co pozwala na porównanie wyników modeli.
-Jako funkcję straty wybrana została wartość bezwzględna błędu, optimizer??? to Adam o współczynniku uczenia 0.0001.
+Jako funkcję straty wybrana została wartość bezwzględna błędu, optymalizator to Adam o współczynniku uczenia 0,0001.
 
 \begin{figure}[h!]
 \begin{center}
@@ -130,68 +173,7 @@ a po 60 epoce praktycznie zatrzymuje.
 Wartym uwagi jest niższa wartość straty w zbiorze walidacyjnym niż uczącym. Jako, że zbiory zostały utworzone z tych samych zdjęć,
 prawdopodobnie jest, że to losowy przypadek w wybranym ziarnie generatora danych.
 Podczas uczenia dokładność była znikoma i stała. Nie jest ona jednak miarodajną metryką, gdyż oczekuje dokładnych wartości pixeli.
-Człowiek nie jest w stanie rozpoznać małych różnić w wartościach RGB, w związku z czym ważna była jedynie wartość funkcji straty.
-
-\section{Wyniki działania modelu}
-W sekcji przedstawione zostały wyniki działania odtwarzania obrazów modelem o 5 warstwach,
-rozmiarze segmentu 256x256 oraz 8 pixelach przesunięcia przy odtawarzaniu (proces opisany w sekcji 8).
-\newpage
-\subsection{Roślinność na tle kamiennej ściany}
-\begin{figure}[h!]
-\begin{center}
-	\includegraphics[width=0.85\columnwidth]{compare_sample.png}
-	\caption{Zestawienie obrazów oryginalnego, skompresowanego, oraz odtworzonego przez sieć}
-\end{center}
-\end{figure}
-\begin{figure}[h!]
-\begin{center}
-	\includegraphics[width=0.85\columnwidth]{orig_vs_comp.png}
-	\caption{Różnice między obrazem oryginalnym i skompresowanym}
-\end{center}
-\end{figure}
-\begin{figure}[h!]
-\begin{center}
-	\includegraphics[width=0.85\columnwidth]{comp_vs_rest.png}
-	\caption{Różnice między obrazem skompresowanym i odtworzonym}
-\end{center}
-\end{figure}
-\begin{figure}[h!]
-\begin{center}
-	\includegraphics[width=0.85\columnwidth]{orig_vs_rest.png}
-	\caption{Różnice między obrazem oryginalnym i odtworzonym}
-\end{center}
-\end{figure}
-
-\newpage
-\subsection{Zarost na twarzy}
-\begin{figure}[h!]
-\begin{center}
-	\includegraphics[width=0.85\columnwidth]{compare_sample2.png}
-	\caption{Zestawienie obrazów oryginalnego, skompresowanego, oraz odtworzonego przez sieć}
-\end{center}
-\end{figure}
-\begin{figure}[h!]
-\begin{center}
-	\includegraphics[width=0.85\columnwidth]{orig_vs_comp2.png}
-	\caption{Różnice między obrazem oryginalnym i skompresowanym}
-\end{center}
-\end{figure}
-\begin{figure}[h!]
-\begin{center}
-	\includegraphics[width=0.85\columnwidth]{comp_vs_rest2.png}
-	\caption{Różnice między obrazem skompresowanym i odtworzonym}
-\end{center}
-\end{figure}
-\begin{figure}[h!]
-\begin{center}
-	\includegraphics[width=0.85\columnwidth]{orig_vs_rest2.png}
-	\caption{Różnice między obrazem oryginalnym i odtworzonym}
-\end{center}
-\end{figure}
-\subsection{Spostrzeżenia}
-Zauważalna jest utrata detali względem obrazu oryginalnego, a nawet względem obrazu skompresowanego. Sieć ma cechy filtra uśredniającego.
-W porównaniach widoczna jest siatka kwadratów o boku 8 pixeli, wynikajaca ze sposobu działania algorytmu JPEG.
-Różnica między obrazem oryginalnym i odtworzonym jest mniejsza niż między obrazem oryginalnym i skompresowanym oraz skompresowanym i odtworzonym.
+Człowiek nie rozpoznaje małych różnic w wartościach RGB, w związku z czym ważna była jedynie wartość funkcji straty.
 
 \section{Wybór optymalnej architektury}
 Ważnym przy wyborze architektury sieci jest jej złożoność, nadmierna negatywnie wpływa na czas uczenia pomimo znikomej poprawy wartości funkcji błędu.
@@ -204,7 +186,6 @@ Przetestowane zostały sieci od 1 do 5 poziomów. Każda została wyszkolona w t
 \end{center}
 \end{figure}
 \newpage
-\subsection{Spostrzeżenia}
 \begin{figure}[h!]
 \begin{center}
 	\includegraphics[width=0.7\columnwidth]{layers.png}
@@ -214,28 +195,90 @@ Przetestowane zostały sieci od 1 do 5 poziomów. Każda została wyszkolona w t
 Zauważyć można zbliżone wyniki sieci o 3, 4 i 5 poziomach.
 Dla 1 i 2 poziomów wystąpiło znaczące pogorszenie wyników. Zmiana wartości funkcji straty spowolniła przy podobnej liczbie epok.
 Wynika z tego, że do problemu wystarczy zastosowania sieci o 3 lub 4 poziomach, co przyśpieszy proces uczenia.
-\subsection{Rozmiar obrazu wejściowego}
-Przetestowany został również wpływ rozmiaru obrazu wejściowego na wartość funkcji straty przy 5 poziomach sieci.
+\subsection{Rozmiar segmentu wejściowego}
+Przetestowany został również wpływ rozmiaru segmentu wejściowego na wartość funkcji straty przy 4 poziomach sieci, przedstawiony na Rys. \ref{fig:size}.
 \begin{figure}[h!]
 \begin{center}
 	\includegraphics[width=0.7\columnwidth]{size.png}
-	\caption{Funcja straty przy różnych rozmiarach obrazu wejściowego}
+	\caption{Funcja straty przy różnych rozmiarach segmentu wejściowego}
+	\label{fig:size}
 \end{center}
 \end{figure}
-Zauważyć można podobne wyniki dla obrazów o rozmiarze 64x64 oraz 128x128 pixeli.
-Dla obrazu o rozmiarach 128x128 pixeli zauważyć można nieznacznie lepsze wyniki dla końcowych epok.
+Zauważyć można podobne wyniki dla segmentów o rozmiarze 64x64 oraz 128x128 pixeli.
+Dla segmentu o rozmiarach 128x128 pixeli zauważyć można nieznacznie niższy błąd dla końcowych epok.
 Jest to jednak skutkiem przetrenowania, gdyż wartość funkcji straty w zbiorze walidacyjnym była stała.
-W przypadku obrazu o rozmiarze 512x512 pixeli nastąpiło znaczące pogorszenie wyników.
+W przypadku segmentów o rozmiarze 512x512 pixeli nastąpiło znaczące pogorszenie wyników.
 Rozważyć można wybór dowolnego z rozmiarów 64x64, 128x128 oraz 256x256 pixeli.
-Należy jednak pamiętać, że mniejszy rozmiar obrazu wejściowego, choć przyśpiesza szkolenie,
-proporcjonalnie wpływa na czas odtwarzania pełnego obrazu.
+Należy jednak pamiętać, że mniejszy rozmiar segmentu wejściowego, choć przyśpiesza szkolenie,
+proporcjonalnie wpływa na czas rekonstrukcję obrazu.
 
-\section{Oddtwarzanie pełnego obrazu}
-Sieć została przystosowana do przetwarzania jednowymiarowych obrazów o rozmiarze 256x256 pixeli.
+\section{Wyniki działania modelu}
+W sekcji przedstawione zostały wyniki działania optymalnej sieci o 4 warstwach,
+rozmiarze segmentu 256x256 oraz 8 pixelach przesunięcia przy rekonstrukcji.
+\newpage
+\subsection{Roślinność na tle kamiennej ściany}
+\begin{figure}[h!]
+\begin{center}
+	\includegraphics[width=0.85\columnwidth]{compare_sample.png}
+	\caption{Segment oryginalny, skompresowany, oraz zrekonstruowany}
+\end{center}
+\end{figure}
+\begin{figure}[h!]
+\begin{center}
+	\includegraphics[width=0.85\columnwidth]{orig_vs_comp.png}
+	\caption{Różnice między segmentem oryginalnym i skompresowanym}
+\end{center}
+\end{figure}
+\begin{figure}[h!]
+\begin{center}
+	\includegraphics[width=0.85\columnwidth]{comp_vs_rest.png}
+	\caption{Różnice między segmentem skompresowanym i zrekonstruowanym}
+\end{center}
+\end{figure}
+\begin{figure}[h!]
+\begin{center}
+	\includegraphics[width=0.85\columnwidth]{orig_vs_rest.png}
+	\caption{Różnice między segmentem oryginalnym i zrekonstruowanym}
+\end{center}
+\end{figure}
+
+\newpage
+\subsection{Zarost na twarzy}
+\begin{figure}[h!]
+\begin{center}
+	\includegraphics[width=0.85\columnwidth]{compare_sample2.png}
+	\caption{Segment oryginalny, skompresowany, oraz zrekonstruowany}
+\end{center}
+\end{figure}
+\begin{figure}[h!]
+\begin{center}
+	\includegraphics[width=0.85\columnwidth]{orig_vs_comp2.png}
+	\caption{Różnice między segmentem oryginalnym i skompresowanym}
+\end{center}
+\end{figure}
+\begin{figure}[h!]
+\begin{center}
+	\includegraphics[width=0.85\columnwidth]{comp_vs_rest2.png}
+	\caption{Różnice między segmentem skompresowanym i zrekonstruowanym}
+\end{center}
+\end{figure}
+\begin{figure}[h!]
+\begin{center}
+	\includegraphics[width=0.85\columnwidth]{orig_vs_rest2.png}
+	\caption{Różnice między segmentem oryginalnym i zrekonstruowanym}
+\end{center}
+\end{figure}
+\subsection{Spostrzeżenia}
+Zauważalna jest utrata detali względem segmentu oryginalnego, a nawet względem segmentu skompresowanego. Sieć ma cechy filtra uśredniającego.
+W porównaniach widoczna jest siatka kwadratów o boku 8 pixeli, wynikajaca ze sposobu działania algorytmu JPEG.
+Różnica między segmentem oryginalnym i zrekonstruowanym jest mniejsza niż między segmentem oryginalnym i skompresowanym oraz skompresowanym i zrekonstruowanym.
+
+\section{Rekonstrukcja pełnego obrazu}
+Sieć została przystosowana do przetwarzania monochromatycznych segmentów o rozmiarze 256x256 pixeli.
 Tworzy to potrzebę przystosowania rozwiązania do przetwarzania obrazów o dowolnym rozmiarze.
-Obraz zostaje podzielony na kanały RGB, a następnie, kolejne segmenty każdej warstwy są przetwarzane przez model.
-Wartości otrzymanej macierzy są zaokrąglane do liczb całkowitych oraz następuje winsoryzacja wartości spoza zakresu 0-255.
-W przypadku segmentów na krawędziach obrazu, brakujący fragment zostaje uzupełniony lustrzanym odbiciem obrazu a po szkoleniu odcięty.
+Obraz zostaje podzielony na kanały RGB, a następnie, kolejne segmenty każdej z warstw są przetwarzane przez model.
+Wartości otrzymanej macierzy są zaokrąglane do liczb całkowitych oraz następuje 3yzacja wartości spoza zakresu 0-255.
+W przypadku segmentów na krawędziach obrazu, brakujący fragment zostaje uzupełniony lustrzanym odbiciem obrazu a po rekontrukcji odcięty.
 Z podejściem wiąże się problem, widocznych granic między przetworzonymi segmentami.
 Rozwiązaniem jest częściowe pokrycie segmentów przy przetwarzaniu oraz zastosowanie średniej ważonej na ich granicy.
 Wagi rzędów i kolumn z segmentu rosną w głąb segmentu.
@@ -243,14 +286,16 @@ Wagi rzędów i kolumn z segmentu rosną w głąb segmentu.
 \begin{figure}[h!]
 \begin{center}
 	\includegraphics[width=0.5\columnwidth]{overlap.png}
-	\caption{Nachodzace na siebie segmenty obrazu}
+	\caption{Nachodzace na siebie segmenty}
 \end{center}
 \end{figure}
 \\
 Pomimo zastosowania średniej ważonej, na granicy segmentów często pozostaje widoczna linnia.
 Problem ten można rozwiązać poprzez wybranie odpowiedniej wartości przesunięcia segmentów.
-Zauważyć można spadek wartości dla przesunięcia o 8 i 16 pixeli [Rys. 17]. Jest to związane z podziałem obrazu na obszary 8x8 przez algorytm JPEG.
-Jeżeli krawędzie powstałe w wyniku przetwarzania obrazu pokryją się z krawędziami powstającymi przy kompresji,
+Wpływ przenunięcia na obraz liczony był wartością średniego błędu bezwzględnego policzonego dla całego obrazu.
+Zauważyć można spadek wartości dla przesunięcia o 8 i 16 pixeli Rys. \ref{fig:overlap_and_loss}.
+Jest to związane z podziałem obrazu na obszary 8x8 przez algorytm JPEG.
+Jeżeli krawędzie powstałe w wyniku rekonstrukcji obrazu pokryją się z krawędziami powstającymi przy kompresji,
 wynikowy błąd będzie mniejszy niż w przypadku, gdyby na obrazie tworzyły się dodatkowe granice.
 Dodatkowo widoczny jest spadek dla 11 pixeli, dla którego nie znam wyjaśnienia.
 Wartość 8 pixeli została wybrana jako optymalna, przy większych wartościach pojawia się ryzyko rozmazania obrazu przez średnią ważoną.
@@ -259,22 +304,17 @@ Wartość 8 pixeli została wybrana jako optymalna, przy większych wartościach
 \begin{center}
 	\includegraphics[width=0.7\columnwidth]{overlap_and_loss.png}
 	\caption{Wartość funkcji błędu dla różnych wartości przesunięcia}
+	\label{fig:overlap_and_loss}
 \end{center}
 \end{figure}
 \section{Wnioski}
 Można zastosować sieci typu U-Net do usuwania artefaktów kompresji stratnej.
-Takie rozwiązanie jest jednak bardzo wolne. Przetworzenie obrazu o wymiarach 3024x4032 pixeli zajmuje około 80 sekund.
-Optymalne wydaje się zastosowanie sieci o 4 poziomach, przy rozmiarze obrazu wejściowego 256x256 pixeli.
-Przy odtwarzaniu obrazu należy zastosować przesunięcie 8 pixeli, aby granice między segmentami pokryły się z granicami powstałymi w wyniku działania algorytmu JPEG.
+Takie rozwiązanie jest jednak bardzo wolne. Przetworzenie obrazu o wymiarach 3024x4032 pixeli zajmuje około 80 sekund z wykorzystaniem karty graficznej Radeon RX 5700 XT.
+Optymalne wydaje się zastosowanie sieci o 4 poziomach, przy rozmiarze segmentu wejściowego 256x256 pixeli.
+Przy rekonstrukcji obrazu należy zastosować przesunięcie 8 pixeli,
+aby granice między segmentami pokryły się z granicami powstałymi w wyniku działania algorytmu JPEG.
+\bibliographystyle{plain}
 
-\section{Źródła}
-\begin{itemize}
-\item https://cgjennings.ca/articles/jpeg-compression/
-\item U-Net: Convolutional Networks for Biomedical Image Segmentation [Olaf Ronneberger, Philipp Fischer, Thomas Brox]
-\item 3D U-Net: Learning Dense Volumetric Segmentation from Sparse Annotation [Özgün Çiçek,Ahmed Abdulkadir, Soeren S. Lienkamp, Thomas Brox, Olaf Ronneberger]
-\item Deep Learning for Photoacoustic Tomography from Sparse Data [Stephan Antholzer, Markus Haltmeier, Johannes Schwab]
-\item Fully Dense UNet for 2D Sparse Photoacoustic Tomography Artifact Removal [Steven Guan, Amir A. Khan, Siddhartha Sikdar, Parag V. Chitnis]
-\item Deep Residual Learning for Image Recognition [Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun]
+\bibliography{sprawozdanie}
 
-\end{itemize}
 \end{document}
