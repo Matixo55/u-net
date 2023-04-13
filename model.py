@@ -91,7 +91,7 @@ def unet(shape, neurons_number: int, batch_size: int, pretrained_weights=None):
         run_eagerly=True,
     )
     # layered_view(model, to_file="model_plot.png",legend=True, draw_volume=False, max_xy=8000)
-    model_to_dot(model, to_file="model_plot.png", show_shapes=True, show_layer_names=False, dpi=200, show_layer_activations=True)
+    plot_model(model, to_file="model_plot.png", show_shapes=True, show_layer_names=False, dpi=200, show_layer_activations=True)
 
     # model.summary()
 

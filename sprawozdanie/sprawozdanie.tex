@@ -10,13 +10,14 @@
 \usepackage{t1enc}
 \usepackage{graphicx}
 \usepackage{indentfirst}
-\usepackage[belowskip=-15pt,aboveskip=15pt]{caption}
+\usepackage[belowskip=-10pt,aboveskip=15pt]{caption}
 \usepackage[a4paper]{geometry}
 \usepackage{listings}
 
 \graphicspath{ {./} }
-\setlength\intextsep{0pt}
+\setlength\intextsep{5pt}
 \setlength{\parindent}{20pt}
+\geometry{bottom=2.5cm, top=2.5cm}
 
 \begin{document}
 \maketitle
@@ -36,30 +37,28 @@ Projekt realizowany jest pod kierunkiem dr hab. inż. Marcina Iwanowskiego.
 \section{Opis problemu}
 \indent Projekt ma na celu zaprezentowanie możliwości wykorzystania sieci neuronowych typu U-Net do usuwania artefaktów kompresji stratnej JPEG.
 Sprawdzone zostały różne architektury sieci, od 1 do 5 poziomów, oraz wpływ rozmiaru segmentu wejściowego na wartość funkcji straty.
-Rozwiązanie zostało przystosowane do przetwarzania obrazów bez względu na ich rozmiar.
+Rozwiązanie zostało przystosowane do przetwarzania obrazów o dowolnym rozmiarze, większym niż segment podawany na wejściu sieci.
 \section{Algorytm kompresji JPEG}
 Przy niskich wartościach parametru jakości, na zapisanych obrazach wyraźny staje się podział zdjęcia na sekcje przez algorytm,
 jak i zaburzenia na krawędziach obiektów. Wynikają one z opisanego poniżej sposobu działania algorytmu. \cite{JPEG}
 \subsection{Operacje na przestrzeni barw}
 W pierwszej kolejności następuje konwersja przestrzeni barw RGB do przestrzeni YCbCr.
-Następnie chrominancja jest podpróbkowana, w wyniku czego każdy pixel obrazu wyjściowego stanowi średnią 4 pixeli obrazu wejściowego.
-Nastepuje utrata danych ale jest mało odczuwalna ze względu budowę ludzkiego oka.
+Następnie chrominancja jest podpróbkowana, w wyniku czego każdy piksel obrazu wyjściowego stanowi średnią 4 pikseli obrazu wejściowego.
+Następuje utrata danych ale jest mało odczuwalna ze względu budowę ludzkiego oka.
 \subsection{Dyskretna transformata kosinusowa}
-Następuje podział obrazu na bloki 8x8 pixeli i odjęcie 128 od wartości każdego pixela.
-Każdy blok zostaje przekształcony w macierz, obrazującą użycie poszczególnych bloków ze stałego zbioru Rys. \ref{fig:DCT}.
+Następuje podział obrazu na bloki 8x8 pikseli i odjęcie 128 od wartości każdego piksela.
+Każdy blok zostaje przekształcony w macierz, obrazującą użycie poszczególnych bloków dyskretnej transformaty kosinusowej.
 \begin{figure}[h!]
 	\begin{center}
 	\includegraphics[width=0.4\columnwidth]{DCT.png}
 	\caption{Dyskretna Transformata Kosinusowa}
-	\label{fig:DCT}
 \end{center}
 \end{figure}
 \\
-Sumując wartości pixeli z wybranych bloków, możemy uzyskać dowolną kombinację 8x8 pixeli.
+Sumując wartości pikseli z wybranych bloków, możemy uzyskać dowolną kombinację 8x8 pikseli.
 \subsection{Kwantyzacja}
-W kolejnym kroku następuje zmniejszenie ilości bitów potrzebnych do reprezentacji wartości pixeli.
-Wartości z macierzy są dzielone przez odpowiadające wartości z tablicy kwantyzacji,
-której zawartość zależy od parametru jakości przy zapisie zdjęcia (wartości są odwrotnie proporcjonalne do parametru jakości).
+W kolejnym kroku następuje zmniejszenie ilości bitów potrzebnych do reprezentacji wartości pikseli.
+Wartości z macierzy są dzielone przez odpowiadające wartości z tablicy kwantyzacji, odwrotnie proporcjonalne do parametru jakości wybranego przy zapisie zdjęcia.
 Współczynniki w tablicy kwantyzacji rosną, zmierzając do dolnej, prawej części macierzy.
 Odpowiada to zwiększaniu się zagęszczenia informacji w tablicy bloków wykorzystanej w poprzednim kroku.
 Taka operacja wykorzystuje problem z rozróżnieniem informacji o dużym zagęszczeniu przez ludzkie oko.
@@ -83,15 +82,14 @@ Wyróżnić można 2 części sieci U-Net.
 \begin{figure}[h!]
 	\begin{center}
 	\includegraphics[width=0.9\columnwidth]{unet.png}
-	\caption{Zastosowana w projekcie architektura sieci U-Net o 5 poziomach}
+	\caption{Zastosowana w projekcie architektura sieci U-Net o 5 poziomach \cite{ronneberger2015unet}}
 \end{center}
 \end{figure}
 \subsection{Enkoder}
-Pierwszą częścią modelu jest warstwa wejściowa, w której dla każdego pixela czarno-białego segmentu wejściowego odpowiada 1 neuron.
+Pierwszą częścią modelu jest warstwa wejściowa, w której każdemu pikselowi monochromatycznego segmentu wejściowego odpowiada 1 neuron.
 Następnie występują 2 etapy składające się z konwolucji o jądrze 3x3 oraz funkcji aktywacji ReLu, zwiększające liczbę neuronów do 64.
-Kolejnu jest powtarzalny segment składający się z redukcji rozdzielczości segmentu i konwolucji z funkcją aktywacji ReLu.
+Kolejne są powtarzalne segmenty składające się z redukcji rozdzielczości segmentu i konwolucji z funkcją aktywacji ReLu.
 Skutkuje to czterokrotnym zmniejszeniem rozmiaru segmentu oraz podwojeniem liczby neuronów w każdej warstwie.
-\newpage
 \lstset{language=Python}
 \lstset{frame=lines}
 \lstset{caption={Implementacja warstwy enkodera w bibliotece Keras}}
@@ -102,10 +100,11 @@ pooling = layers.MaxPooling2D(pool_size=2, strides=2)(input)
 conv = layers.Conv2D(
     neurons_number, kernel_size=3, padding="same", activation="relu"
 )(pooling)
-return layers.Conv2D(
+layers.Conv2D(
     neurons_number, kernel_size=3, padding="same", activation="relu"
 )(conv)
 \end{lstlisting}
+\newpage
 
 \subsection{Dekoder}
 Każda z powtarzalnych warstw dekodera składa się z 3 elementów.
@@ -125,24 +124,25 @@ concat = layers.Concatenate(axis=3)([tconv, connected_layer])
 dconv = layers.Conv2D(
     neurons_number / 2, kernel_size=3, padding="same", activation="relu"
 )(concat)
-return layers.Conv2D(
+layers.Conv2D(
     neurons_number / 2, kernel_size=3, padding="same", activation="relu"
 )(dconv)
 \end{lstlisting}
 
 Dekoder zakończony jest spłaszczeniem segmentu do postaci, w której każdy neuron odpowiada 1 pikselowi segmentu wyjściowego.
 Warstwa wyjściowa jest sumą segmentu wejściowego i spłaszczonej warstwy.
-Przy takim rozwiązaniu, zwanym połączeniami rezydualnymi, sieć tworzy maskę zmian potrzebnych w segmentu wejściowym,
-zamiast bezpośrednio segmentu przekształcać. \cite{he2015deep}
+Przy takim rozwiązaniu, zwanym połączeniami rezydualnymi, sieć tworzy maskę zmian potrzebnych w segmencie wejściowym,
+zamiast bezpośrednio przekształcać segment. \cite{he2015deep}
 
-\section{Generowanie zbioru danych}
-Zbiór danych stanowi 16 kolorowych zdjęć wysokiej rozdzielczości, 1 czarnobiały wykres służący do kalibracji sprzętu fotograficznego,
+\section{Generacja zbioru danych}
+Zbiór danych stanowi 16 kolorowych zdjęć wysokiej rozdzielczości, 1 monochromatyczny wykres służący do kalibracji sprzętu fotograficznego,
 oraz 3 wygenerowane obrazy składające się z gradientów kolorów i prostych kształtów.
-Zdjęcia zostają podzielone na warstwy RGB, a następnie utworzone zostają wszystkie możliwe kombinacje obróceń i odbić segmentu.
-Następuje pocięcie zdjęć na kwadratowe segmenty o zadanym rozmiarze.
-Oryginał segemntu zostaje zapisany przy ustawieniu jakości równym 100 wykorzystywana jako maska w modelu.
-Dane uczące zostaja zapisane przy ustawieniu równym 25, przy którym artefakty kompresji zaczynają być łatwo zauważalne.
-W przypadku podziału na segmenty o rozmiarze 256x256 pixeli otrzymujemy 9500 próbek w zbiorze testowym, oraz 1000 w zbiorze walidacyjnym.
+Zdjęcia zostają podzielone na warstwy RGB i pocięte na kwadratowe segmenty o zadanym rozmiarze.
+Wygenerowane zostają wszystkie możliwe kombinacje obróceń i odbić segmentów.
+Oryginały segmentów zostają zapisane przy parametrze jakości wynoszącym 100.
+Zbiór zostaje podzielony na dane uczące i testowe w proporcji 9:1.
+Segmenty zostają zapisane przy ustawieniu jakości równym 25, przy którym artefakty kompresji zaczynają być łatwo zauważalne.
+W przypadku podziału na segmenty o rozmiarze 256x256 pikseli otrzymujemy 9500 próbek w zbiorze testowym, oraz 1000 w zbiorze walidacyjnym.
 \begin{figure}[h!]
 \begin{center}
 	\includegraphics[width=0.85\columnwidth]{dataset.png}
@@ -152,9 +152,9 @@ W przypadku podziału na segmenty o rozmiarze 256x256 pixeli otrzymujemy 9500 pr
 
 \newpage
 \section{Model i szkolenie}
-Podstawową architekturą w projekcie jest, najczęściej stosowana, sieć o 5 poziomach.
-Podczas uczenia utworzone zostają generatory danych testowych i walidacyjnych.
-Zawierają one skompresowane oraz oryginalne segmentu, te drugie wykorzystywane w modelu jako maska.
+Podstawową architekturą w projekcie jest, najczęściej stosowana, sieć o 5 poziomach. \cite{ronneberger2015unet}
+Do procesu uczenia utworzone zostają generatory danych testowych i walidacyjnych.
+Zawierają one skompresowane oraz oryginalne segmenty, te drugie wykorzystywane w modelu jako maska.
 Pogrupowane zostają w paczki po 3.
 Podczas jednego kroku uczenia, wykorzystane zostaje, losowo wybrane, 10\% paczek ze zbioru uczącego.
 Proces uczenia trwa 100 epok.
@@ -170,11 +170,11 @@ Jako funkcję straty wybrana została wartość bezwzględna błędu, optymaliza
 
 Zauważyć można, że po 20 epoce, tempo zmniejszania wartości funkcji straty znacząco maleje,
 a po 60 epoce praktycznie zatrzymuje.
-Wartym uwagi jest niższa wartość straty w zbiorze walidacyjnym niż uczącym. Jako, że zbiory zostały utworzone z tych samych zdjęć,
+Wartym uwagi jest niższa wartość straty w zbiorze walidacyjnym niż uczącym. Jako że zbiory zostały utworzone z tych samych zdjęć,
 prawdopodobnie jest, że to losowy przypadek w wybranym ziarnie generatora danych.
-Podczas uczenia dokładność była znikoma i stała. Nie jest ona jednak miarodajną metryką, gdyż oczekuje dokładnych wartości pixeli.
+Podczas uczenia dokładność była znikoma i stała. Nie jest ona jednak miarodajną metryką, gdyż oczekuje dokładnych wartości pikseli.
 Człowiek nie rozpoznaje małych różnic w wartościach RGB, w związku z czym ważna była jedynie wartość funkcji straty.
-
+\newpage
 \section{Wybór optymalnej architektury}
 Ważnym przy wyborze architektury sieci jest jej złożoność, nadmierna negatywnie wpływa na czas uczenia pomimo znikomej poprawy wartości funkcji błędu.
 \subsection{Liczba poziomów sieci}
@@ -186,6 +186,16 @@ Przetestowane zostały sieci od 1 do 5 poziomów. Każda została wyszkolona w t
 \end{center}
 \end{figure}
 \newpage
+\newgeometry{bottom=0.1cm, top=0.1cm}
+\begin{figure}[h!]
+\begin{center}
+	\includegraphics[height=0.95\paperheight]{model_plot.png}
+	\caption{Implementacja sieci U-Net o 4 poziomach w Keras}
+\end{center}
+\end{figure}
+\thispagestyle{empty}
+\newpage
+\restoregeometry
 \begin{figure}[h!]
 \begin{center}
 	\includegraphics[width=0.7\columnwidth]{layers.png}
@@ -204,17 +214,17 @@ Przetestowany został również wpływ rozmiaru segmentu wejściowego na wartoś
 	\label{fig:size}
 \end{center}
 \end{figure}
-Zauważyć można podobne wyniki dla segmentów o rozmiarze 64x64 oraz 128x128 pixeli.
-Dla segmentu o rozmiarach 128x128 pixeli zauważyć można nieznacznie niższy błąd dla końcowych epok.
+Zauważyć można podobne wyniki dla segmentów o rozmiarze 64x64 oraz 128x128 pikseli.
+Dla segmentu o rozmiarach 128x128 pikseli zauważyć można nieznacznie niższy błąd dla końcowych epok.
 Jest to jednak skutkiem przetrenowania, gdyż wartość funkcji straty w zbiorze walidacyjnym była stała.
-W przypadku segmentów o rozmiarze 512x512 pixeli nastąpiło znaczące pogorszenie wyników.
-Rozważyć można wybór dowolnego z rozmiarów 64x64, 128x128 oraz 256x256 pixeli.
+W przypadku segmentów o rozmiarze 512x512 pikseli nastąpiło znaczące pogorszenie wyników.
+Rozważyć można wybór dowolnego z rozmiarów 64x64, 128x128 oraz 256x256 pikseli.
 Należy jednak pamiętać, że mniejszy rozmiar segmentu wejściowego, choć przyśpiesza szkolenie,
 proporcjonalnie wpływa na czas rekonstrukcję obrazu.
 
 \section{Wyniki działania modelu}
-W sekcji przedstawione zostały wyniki działania optymalnej sieci o 4 warstwach,
-rozmiarze segmentu 256x256 oraz 8 pixelach przesunięcia przy rekonstrukcji.
+Na kolejnych stronach przedstawione zostały wyniki działania optymalnej sieci o 4 warstwach,
+rozmiarze segmentu 256x256 oraz 8 pikselach przesunięcia przy rekonstrukcji.
 \newpage
 \subsection{Roślinność na tle kamiennej ściany}
 \begin{figure}[h!]
@@ -270,15 +280,15 @@ rozmiarze segmentu 256x256 oraz 8 pixelach przesunięcia przy rekonstrukcji.
 \end{figure}
 \subsection{Spostrzeżenia}
 Zauważalna jest utrata detali względem segmentu oryginalnego, a nawet względem segmentu skompresowanego. Sieć ma cechy filtra uśredniającego.
-W porównaniach widoczna jest siatka kwadratów o boku 8 pixeli, wynikajaca ze sposobu działania algorytmu JPEG.
+W porównaniach widoczna jest siatka kwadratów o boku 8 pikseli, wynikająca ze sposobu działania algorytmu JPEG.
 Różnica między segmentem oryginalnym i zrekonstruowanym jest mniejsza niż między segmentem oryginalnym i skompresowanym oraz skompresowanym i zrekonstruowanym.
 
 \section{Rekonstrukcja pełnego obrazu}
-Sieć została przystosowana do przetwarzania monochromatycznych segmentów o rozmiarze 256x256 pixeli.
+Sieć została przystosowana do przetwarzania monochromatycznych segmentów o rozmiarze 256x256 pikseli.
 Tworzy to potrzebę przystosowania rozwiązania do przetwarzania obrazów o dowolnym rozmiarze.
 Obraz zostaje podzielony na kanały RGB, a następnie, kolejne segmenty każdej z warstw są przetwarzane przez model.
-Wartości otrzymanej macierzy są zaokrąglane do liczb całkowitych oraz następuje 3yzacja wartości spoza zakresu 0-255.
-W przypadku segmentów na krawędziach obrazu, brakujący fragment zostaje uzupełniony lustrzanym odbiciem obrazu a po rekontrukcji odcięty.
+Wartości otrzymanej macierzy są zaokrąglane do liczb całkowitych oraz następuje winsoryzacja wartości spoza zakresu 0-255.
+W przypadku segmentów na krawędziach obrazu, brakujący fragment zostaje uzupełniony lustrzanym odbiciem obrazu a po rekonstrukcji odcięty.
 Z podejściem wiąże się problem, widocznych granic między przetworzonymi segmentami.
 Rozwiązaniem jest częściowe pokrycie segmentów przy przetwarzaniu oraz zastosowanie średniej ważonej na ich granicy.
 Wagi rzędów i kolumn z segmentu rosną w głąb segmentu.
@@ -292,14 +302,13 @@ Wagi rzędów i kolumn z segmentu rosną w głąb segmentu.
 \\
 Pomimo zastosowania średniej ważonej, na granicy segmentów często pozostaje widoczna linnia.
 Problem ten można rozwiązać poprzez wybranie odpowiedniej wartości przesunięcia segmentów.
-Wpływ przenunięcia na obraz liczony był wartością średniego błędu bezwzględnego policzonego dla całego obrazu.
-Zauważyć można spadek wartości dla przesunięcia o 8 i 16 pixeli Rys. \ref{fig:overlap_and_loss}.
+Wpływ przesunięcia na obraz liczony był wartością średniego błędu bezwzględnego policzonego dla całego obrazu.
+Zauważyć można spadek wartości dla przesunięcia o 8 i 16 pikseli Rys. \ref{fig:overlap_and_loss}.
 Jest to związane z podziałem obrazu na obszary 8x8 przez algorytm JPEG.
 Jeżeli krawędzie powstałe w wyniku rekonstrukcji obrazu pokryją się z krawędziami powstającymi przy kompresji,
 wynikowy błąd będzie mniejszy niż w przypadku, gdyby na obrazie tworzyły się dodatkowe granice.
-Dodatkowo widoczny jest spadek dla 11 pixeli, dla którego nie znam wyjaśnienia.
-Wartość 8 pixeli została wybrana jako optymalna, przy większych wartościach pojawia się ryzyko rozmazania obrazu przez średnią ważoną.
-\newpage
+Dodatkowo widoczny jest spadek dla 11 pikseli, dla którego nie znam wyjaśnienia.
+Wartość 8 pikseli została wybrana jako optymalna, przy większych wartościach pojawia się ryzyko rozmazania obrazu przez średnią ważoną.
 \begin{figure}[h!]
 \begin{center}
 	\includegraphics[width=0.7\columnwidth]{overlap_and_loss.png}
@@ -309,9 +318,9 @@ Wartość 8 pixeli została wybrana jako optymalna, przy większych wartościach
 \end{figure}
 \section{Wnioski}
 Można zastosować sieci typu U-Net do usuwania artefaktów kompresji stratnej.
-Takie rozwiązanie jest jednak bardzo wolne. Przetworzenie obrazu o wymiarach 3024x4032 pixeli zajmuje około 80 sekund z wykorzystaniem karty graficznej Radeon RX 5700 XT.
-Optymalne wydaje się zastosowanie sieci o 4 poziomach, przy rozmiarze segmentu wejściowego 256x256 pixeli.
-Przy rekonstrukcji obrazu należy zastosować przesunięcie 8 pixeli,
+Takie rozwiązanie jest jednak bardzo wolne. Przetworzenie obrazu o wymiarach 3024x4032 pikseli zajmuje około 80 sekund z wykorzystaniem karty graficznej Radeon RX 5700 XT.
+Optymalne wydaje się zastosowanie sieci o 4 poziomach, przy rozmiarze segmentu wejściowego 256x256 pikseli.
+Przy rekonstrukcji obrazu należy zastosować przesunięcie 8 pikseli,
 aby granice między segmentami pokryły się z granicami powstałymi w wyniku działania algorytmu JPEG.
 \bibliographystyle{plain}
 
