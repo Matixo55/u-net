@@ -1,9 +1,6 @@
-from PIL.Image import Image
-from keras.utils import plot_model, model_to_dot
-from matplotlib import pyplot as plt
+from keras.utils import plot_model
 from tensorflow.python.keras import layers, models
 from tensorflow.python.keras.optimizer_v2.adam import Adam
-from visualkeras import layered_view
 
 
 def encoder_layer(input, neurons_number):
@@ -52,19 +49,19 @@ def unet(shape, neurons_number: int, batch_size: int, pretrained_weights=None):
     encoder_3 = encoder_layer(encoder_2, neurons_number)
 
     # -------------------------------------------------------------------------
-    # neurons_number *= 2
+    neurons_number *= 2
 
-    # encoder_4 = encoder_layer(encoder_3, neurons_number)
-
-    # -------------------------------------------------------------------------
-    # neurons_number /= 2
-    #
-    # decoder_1 = decoder_layer(encoder_3, neurons_number, encoder_3)
+    encoder_4 = encoder_layer(encoder_3, neurons_number)
 
     # -------------------------------------------------------------------------
     neurons_number /= 2
 
-    decoder_2 = decoder_layer(encoder_3, neurons_number, encoder_2)
+    decoder_1 = decoder_layer(encoder_4, neurons_number, encoder_3)
+
+    # -------------------------------------------------------------------------
+    neurons_number /= 2
+
+    decoder_2 = decoder_layer(decoder_1, neurons_number, encoder_2)
 
     # -------------------------------------------------------------------------
     neurons_number /= 2
@@ -90,8 +87,7 @@ def unet(shape, neurons_number: int, batch_size: int, pretrained_weights=None):
         metrics=[],
         run_eagerly=True,
     )
-    # layered_view(model, to_file="model_plot.png",legend=True, draw_volume=False, max_xy=8000)
-    plot_model(model, to_file="model_plot.png", show_shapes=True, show_layer_names=False, dpi=200, show_layer_activations=True)
+    # plot_model(model, to_file="model_plot.png", show_shapes=True, show_layer_names=False, dpi=200, show_layer_activations=True)
 
     # model.summary()
 

@@ -35,19 +35,19 @@ Projekt realizowany jest pod kierunkiem dr hab. inż. Marcina Iwanowskiego.
 
 \newpage
 \section{Opis problemu}
-\indent Projekt ma na celu zaprezentowanie możliwości wykorzystania sieci neuronowych typu U-Net do usuwania artefaktów kompresji stratnej JPEG.
+\indent Projekt ma na celu sprawdzenie możliwości wykorzystania sieci neuronowych typu U-Net do usuwania artefaktów kompresji stratnej JPEG.
 Sprawdzone zostały różne architektury sieci, od 1 do 5 poziomów, oraz wpływ rozmiaru segmentu wejściowego na wartość funkcji straty.
-Rozwiązanie zostało przystosowane do przetwarzania obrazów o dowolnym rozmiarze, większym niż segment podawany na wejściu sieci.
+Rozwiązanie zostało przystosowane do przetwarzania obrazów o dowolnym, większym niż segment podawany na wejściu sieci, rozmiarze.
 \section{Algorytm kompresji JPEG}
-Przy niskich wartościach parametru jakości, na zapisanych obrazach wyraźny staje się podział zdjęcia na sekcje przez algorytm,
+Przy niskich wartościach ustawienia jakości, na zapisanych obrazach wyraźny staje się podział zdjęcia na sekcje przez algorytm,
 jak i zaburzenia na krawędziach obiektów. Wynikają one z opisanego poniżej sposobu działania algorytmu. \cite{JPEG}
 \subsection{Operacje na przestrzeni barw}
-W pierwszej kolejności następuje konwersja przestrzeni barw RGB do przestrzeni YCbCr.
+W pierwszej kolejności przestrzeń barw RGB konwertowana jest do przestrzeni YCbCr.
 Następnie chrominancja jest podpróbkowana, w wyniku czego każdy piksel obrazu wyjściowego stanowi średnią 4 pikseli obrazu wejściowego.
 Następuje utrata danych ale jest mało odczuwalna ze względu budowę ludzkiego oka.
 \subsection{Dyskretna transformata kosinusowa}
-Następuje podział obrazu na bloki 8x8 pikseli i odjęcie 128 od wartości każdego piksela.
-Każdy blok zostaje przekształcony w macierz, obrazującą użycie poszczególnych bloków dyskretnej transformaty kosinusowej.
+Obraz zostaje podzielony na segmenty 8x8 pikseli, odjęte zostaje 128 od wartości każdego piksela.
+Każdy z segmentów zostaje przekształcony w macierz, obrazującą użycie poszczególnych bloków dyskretnej transformaty kosinusowej.
 \begin{figure}[h!]
 	\begin{center}
 	\includegraphics[width=0.4\columnwidth]{DCT.png}
@@ -58,7 +58,7 @@ Każdy blok zostaje przekształcony w macierz, obrazującą użycie poszczególn
 Sumując wartości pikseli z wybranych bloków, możemy uzyskać dowolną kombinację 8x8 pikseli.
 \subsection{Kwantyzacja}
 W kolejnym kroku następuje zmniejszenie ilości bitów potrzebnych do reprezentacji wartości pikseli.
-Wartości z macierzy są dzielone przez odpowiadające wartości z tablicy kwantyzacji, odwrotnie proporcjonalne do parametru jakości wybranego przy zapisie zdjęcia.
+Wartości z macierzy są dzielone przez odpowiadające wartości, odwrotnie proporcjonalne do wybranego ustawienia jakości, z tablicy kwantyzacji.
 Współczynniki w tablicy kwantyzacji rosną, zmierzając do dolnej, prawej części macierzy.
 Odpowiada to zwiększaniu się zagęszczenia informacji w tablicy bloków wykorzystanej w poprzednim kroku.
 Taka operacja wykorzystuje problem z rozróżnieniem informacji o dużym zagęszczeniu przez ludzkie oko.
@@ -87,7 +87,7 @@ Wyróżnić można 2 części sieci U-Net.
 \end{figure}
 \subsection{Enkoder}
 Pierwszą częścią modelu jest warstwa wejściowa, w której każdemu pikselowi monochromatycznego segmentu wejściowego odpowiada 1 neuron.
-Następnie występują 2 etapy składające się z konwolucji o jądrze 3x3 oraz funkcji aktywacji ReLu, zwiększające liczbę neuronów do 64.
+Następne są 2 etapy konwolucji o jądrze 3x3 oraz funkcji aktywacji ReLu, zwiększające liczbę neuronów do 64.
 Kolejne są powtarzalne segmenty składające się z redukcji rozdzielczości segmentu i konwolucji z funkcją aktywacji ReLu.
 Skutkuje to czterokrotnym zmniejszeniem rozmiaru segmentu oraz podwojeniem liczby neuronów w każdej warstwie.
 \lstset{language=Python}
@@ -110,7 +110,7 @@ layers.Conv2D(
 Każda z powtarzalnych warstw dekodera składa się z 3 elementów.
 Pierwsza jest transponowana konwolucja o jądrze 2x2. Następnie powstała sieć jest łączona z odpowiadającą jej warstwą enkodera.
 Takie połączenie przeciwdziała problemowi zanikającego gradientu - przywraca cechy wykryte w poprzednich warstwach sieci.
-Po niej występują 2 warstwy konwolucji z funkcją aktywacji ReLu, takie same jak w enkoderze.
+Po niej znajdują się 2 warstwy konwolucji z funkcją aktywacji ReLu.
 \lstset{language=Python}
 \lstset{frame=lines}
 \lstset{caption={Implementacja warstwy dekodera w bibliotece Keras}}
@@ -176,7 +176,7 @@ Podczas uczenia dokładność była znikoma i stała. Nie jest ona jednak miarod
 Człowiek nie rozpoznaje małych różnic w wartościach RGB, w związku z czym ważna była jedynie wartość funkcji straty.
 \newpage
 \section{Wybór optymalnej architektury}
-Ważnym przy wyborze architektury sieci jest jej złożoność, nadmierna negatywnie wpływa na czas uczenia pomimo znikomej poprawy wartości funkcji błędu.
+Ważna przy wyborze architektury sieci jest jej złożoność, nadmierna negatywnie wpływa na czas uczenia pomimo znikomej poprawy wartości funkcji błędu.
 \subsection{Liczba poziomów sieci}
 Przetestowane zostały sieci od 1 do 5 poziomów. Każda została wyszkolona w takich samych warunkach i przy stałym ziarnie generatora danych.
 \begin{figure}[h!]
@@ -190,7 +190,7 @@ Przetestowane zostały sieci od 1 do 5 poziomów. Każda została wyszkolona w t
 \begin{figure}[h!]
 \begin{center}
 	\includegraphics[height=0.95\paperheight]{model_plot.png}
-	\caption{Implementacja sieci U-Net o 4 poziomach w Keras}
+	\caption{Graf obrazujący sieć U-Net o 4 poziomach zaimplementowaną w Keras}
 \end{center}
 \end{figure}
 \thispagestyle{empty}
@@ -206,7 +206,7 @@ Zauważyć można zbliżone wyniki sieci o 3, 4 i 5 poziomach.
 Dla 1 i 2 poziomów wystąpiło znaczące pogorszenie wyników. Zmiana wartości funkcji straty spowolniła przy podobnej liczbie epok.
 Wynika z tego, że do problemu wystarczy zastosowania sieci o 3 lub 4 poziomach, co przyśpieszy proces uczenia.
 \subsection{Rozmiar segmentu wejściowego}
-Przetestowany został również wpływ rozmiaru segmentu wejściowego na wartość funkcji straty przy 4 poziomach sieci, przedstawiony na Rys. \ref{fig:size}.
+Przetestowany został również wpływ rozmiaru segmentu wejściowego na wartość funkcji straty przy 4 poziomach sieci.
 \begin{figure}[h!]
 \begin{center}
 	\includegraphics[width=0.7\columnwidth]{size.png}
@@ -215,7 +215,7 @@ Przetestowany został również wpływ rozmiaru segmentu wejściowego na wartoś
 \end{center}
 \end{figure}
 Zauważyć można podobne wyniki dla segmentów o rozmiarze 64x64 oraz 128x128 pikseli.
-Dla segmentu o rozmiarach 128x128 pikseli zauważyć można nieznacznie niższy błąd dla końcowych epok.
+Dla segmentu o rozmiarach 128x128 pikseli, błąd był nieznacznie niższy dla końcowych epok.
 Jest to jednak skutkiem przetrenowania, gdyż wartość funkcji straty w zbiorze walidacyjnym była stała.
 W przypadku segmentów o rozmiarze 512x512 pikseli nastąpiło znaczące pogorszenie wyników.
 Rozważyć można wybór dowolnego z rozmiarów 64x64, 128x128 oraz 256x256 pikseli.
@@ -223,9 +223,8 @@ Należy jednak pamiętać, że mniejszy rozmiar segmentu wejściowego, choć prz
 proporcjonalnie wpływa na czas rekonstrukcję obrazu.
 
 \section{Wyniki działania modelu}
-Na kolejnych stronach przedstawione zostały wyniki działania optymalnej sieci o 4 warstwach,
+Przedstawione zostały wyniki działania optymalnej sieci o 4 warstwach,
 rozmiarze segmentu 256x256 oraz 8 pikselach przesunięcia przy rekonstrukcji.
-\newpage
 \subsection{Roślinność na tle kamiennej ściany}
 \begin{figure}[h!]
 \begin{center}
@@ -284,19 +283,20 @@ W porównaniach widoczna jest siatka kwadratów o boku 8 pikseli, wynikająca ze
 Różnica między segmentem oryginalnym i zrekonstruowanym jest mniejsza niż między segmentem oryginalnym i skompresowanym oraz skompresowanym i zrekonstruowanym.
 
 \section{Rekonstrukcja pełnego obrazu}
-Sieć została przystosowana do przetwarzania monochromatycznych segmentów o rozmiarze 256x256 pikseli.
-Tworzy to potrzebę przystosowania rozwiązania do przetwarzania obrazów o dowolnym rozmiarze.
-Obraz zostaje podzielony na kanały RGB, a następnie, kolejne segmenty każdej z warstw są przetwarzane przez model.
+Sieć została zaprojektowana do rekonstrukcji monochromatycznych segmentów o rozmiarze 256x256 pikseli.
+Tworzy to potrzebę opracowania rozwiązania do przetwarzania obrazów o dowolnym rozmiarze.
+Obraz zostaje podzielony na kanały RGB a następnie, kolejne segmenty każdej z warstw są rekonstruowane przez model.
 Wartości otrzymanej macierzy są zaokrąglane do liczb całkowitych oraz następuje winsoryzacja wartości spoza zakresu 0-255.
 W przypadku segmentów na krawędziach obrazu, brakujący fragment zostaje uzupełniony lustrzanym odbiciem obrazu a po rekonstrukcji odcięty.
 Z podejściem wiąże się problem, widocznych granic między przetworzonymi segmentami.
-Rozwiązaniem jest częściowe pokrycie segmentów przy przetwarzaniu oraz zastosowanie średniej ważonej na ich granicy.
-Wagi rzędów i kolumn z segmentu rosną w głąb segmentu.
+Rozwiązaniem jest częściowe pokrycie segmentów przy przetwarzaniu oraz zastosowanie średniej ważonej na ich granicy Rys. \ref{fig:overlap}.
+Wagi rzędów i kolumn rosną w głąb segmentu.
 \\
 \begin{figure}[h!]
 \begin{center}
-	\includegraphics[width=0.5\columnwidth]{overlap.png}
+	\includegraphics[width=0.4\columnwidth]{overlap.png}
 	\caption{Nachodzace na siebie segmenty}
+	\label{fig:overlap}
 \end{center}
 \end{figure}
 \\
@@ -323,7 +323,7 @@ Optymalne wydaje się zastosowanie sieci o 4 poziomach, przy rozmiarze segmentu 
 Przy rekonstrukcji obrazu należy zastosować przesunięcie 8 pikseli,
 aby granice między segmentami pokryły się z granicami powstałymi w wyniku działania algorytmu JPEG.
 \bibliographystyle{plain}
-
+\newpage
 \bibliography{sprawozdanie}
 
 \end{document}

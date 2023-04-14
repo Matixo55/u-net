@@ -138,31 +138,31 @@ def restore_corner_segment(array, x, y, size, image, model, overlap_size):
 
 
 def restore_image(image, size, model, original, overlap_size):
-    o_r, o_g, o_b = image.split()
-    o_r = np.array(o_r)
-    o_g = np.array(o_g)
-    o_b = np.array(o_b)
-    # a, b, c = original.split()
-    # a = np.array(a)
+    red, green, blue = image.split()
+    red = np.array(red)
+    green = np.array(green)
+    blue = np.array(blue)
+    # r, g, b = original.split()
+    # r = np.array(r)
+    # g = np.array(g)
     # b = np.array(b)
-    # c = np.array(c)
 
     x = 0
     y = 0
     while y + size < image.size[1]:
         print(y)
         while x + size < image.size[0]:
-            o_r = restore_middle_segment(o_r, x, y, size, model, overlap_size)
-            o_b = restore_middle_segment(o_b, x, y, size, model, overlap_size)
-            o_g = restore_middle_segment(o_g, x, y, size, model, overlap_size)
+            red = restore_middle_segment(red, x, y, size, model, overlap_size)
+            blue = restore_middle_segment(blue, x, y, size, model, overlap_size)
+            green = restore_middle_segment(green, x, y, size, model, overlap_size)
 
             x += size - overlap_size
 
         if x != image.size[0]:
             # Jeżeli szerokość obrazu nie jest wielokrotnością rozmiaru segmentu, pozostanie fragment na brzegu
-            o_r = restore_side_segment(o_r, x, y, size, image, model, overlap_size)
-            o_b = restore_side_segment(o_b, x, y, size, image, model, overlap_size)
-            o_g = restore_side_segment(o_g, x, y, size, image, model, overlap_size)
+            red = restore_side_segment(red, x, y, size, image, model, overlap_size)
+            blue = restore_side_segment(blue, x, y, size, image, model, overlap_size)
+            green = restore_side_segment(green, x, y, size, image, model, overlap_size)
 
         x = 0
         y += size - overlap_size
@@ -171,22 +171,22 @@ def restore_image(image, size, model, original, overlap_size):
         # Jeżeli wysokość obrazu nie jest wielokrotnością rozmiaru segmentu, pozostanie fragment na dole
         print(y)
         while x + size < image.size[0]:
-            o_r = restore_bottom_segment(o_r, x, y, size, image, model, overlap_size)
-            o_b = restore_bottom_segment(o_b, x, y, size, image, model, overlap_size)
-            o_g = restore_bottom_segment(o_g, x, y, size, image, model, overlap_size)
+            red = restore_bottom_segment(red, x, y, size, image, model, overlap_size)
+            blue = restore_bottom_segment(blue, x, y, size, image, model, overlap_size)
+            green = restore_bottom_segment(green, x, y, size, image, model, overlap_size)
 
             x += size - overlap_size
 
         if x != image.size[0]:
             # Dodatkowo może pozostać fragment w rogu obrazu
-            o_r = restore_corner_segment(o_r, x, y, size, image, model, overlap_size)
-            o_b = restore_corner_segment(o_b, x, y, size, image, model, overlap_size)
-            o_g = restore_corner_segment(o_g, x, y, size, image, model, overlap_size)
+            red = restore_corner_segment(red, x, y, size, image, model, overlap_size)
+            blue = restore_corner_segment(blue, x, y, size, image, model, overlap_size)
+            green = restore_corner_segment(green, x, y, size, image, model, overlap_size)
     # print(
-    #     f"Gradient {overlap}  {mean(mean(np.abs(a - o_r), axis=-1)+ mean(np.abs(b - o_g), axis=-1)+ mean(np.abs(c - o_b), axis=-1)):.2f}"
+    #     f"Gradient {overlap}  {mean(mean(np.abs(r - red), axis=-1)+ mean(np.abs(g - green), axis=-1)+ mean(np.abs(b - blue), axis=-1)):.2f}"
     # )
 
-    image = np.stack([o_r, o_g, o_b], axis=2)
+    image = np.stack([red, green, blue], axis=2)
     return image
 
 
