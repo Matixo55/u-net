@@ -182,9 +182,6 @@ def restore_image(image, size, model, original, overlap_size):
             red = restore_corner_segment(red, x, y, size, image, model, overlap_size)
             blue = restore_corner_segment(blue, x, y, size, image, model, overlap_size)
             green = restore_corner_segment(green, x, y, size, image, model, overlap_size)
-    # print(
-    #     f"Gradient {overlap}  {mean(mean(np.abs(r - red), axis=-1)+ mean(np.abs(g - green), axis=-1)+ mean(np.abs(b - blue), axis=-1)):.2f}"
-    # )
 
     image = np.stack([red, green, blue], axis=2)
     return image
